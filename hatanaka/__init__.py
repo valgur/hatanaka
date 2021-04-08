@@ -9,9 +9,40 @@ import hatanaka.bin
 from importlib_resources import path
 
 __all__ = ['rnx2crx', 'crx2rnx', 'HatanakaException']
+__version__ = '4.0.8.0'
 
 
-def rnx2crx(rnx_content: Union[AnyStr, IO], reinit_every_nth: int = None, skip_strange: bool = False) -> AnyStr:
+def rnx2crx(rnx_content: Union[AnyStr, IO], reinit_every_nth: int = None,
+            skip_strange: bool = False) -> AnyStr:
+    """Compress a RINEX observation file into the Compact RINEX format.
+
+    Parameters
+    ----------
+    rnx_content : str or bytes or file-like
+        RINEX observation file content
+    reinit_every_nth : int, optional
+        Initialize the compression operation at every # epochs.
+        When some part of the Compact RINEX file is lost, the data can not be recovered
+        thereafteruntil all the data arc are initialized for differential operation.
+        This option may be used to increase chances to recover parts of data by using the
+        skip_strange option of crx2rnx at the cost of increase of file size.
+    skip_strange : bool, default False
+        Warn and skip strange epochs instead of raising an exception.
+    
+    Returns
+    -------
+    str or bytes
+        Compressed RINEX file content. bytes if rnx_content was binary, otherwise str.
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during compression.
+    
+    Warns
+    -----
+    Any non-critical problems during compression will be raised as warnings.
+    """
     extra_args = []
     if reinit_every_nth:
         assert isinstance(reinit_every_nth, int)
@@ -22,30 +53,59 @@ def rnx2crx(rnx_content: Union[AnyStr, IO], reinit_every_nth: int = None, skip_s
 
 
 def crx2rnx(crx_content: Union[AnyStr, IO], skip_strange: bool = False) -> AnyStr:
+    """Restore the original RINEX observation file from a Compact RINEX file.
+
+    Parameters
+    ----------
+    crx_content : str or bytes or file-like
+        Compact RINEX observation file content
+    skip_strange : bool, default False
+        Warn and skip strange epochs instead of raising an exception.
+        This option may be used for salvaging usable data when middle of the Compact
+        RINEX file is missing. The data after the missing part, are, however, useless
+        until the compression operation of all data are initialized at some epoch.
+        Using this together with of reinit_every_nth option of rnx2crx may be effective.
+        Caution: It is assumed that no change in the list of data types happens in the
+        lost part of the data.
+
+    Returns
+    -------
+    str or bytes
+        Decompressed RINEX file content. bytes if crx_content was binary, otherwise str. 
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during decompression.
+    
+    Warns
+    -----
+    Any non-critical problems during decompression will be raised as warnings.
+    """
     extra_args = []
     if skip_strange:
         extra_args = ['-s']
     return _run('crx2rnx', crx_content, extra_args)
 
 
-def is_binary(f: IO) -> bool:
-    return isinstance(f.read(0), bytes)
-
-
 class HatanakaException(RuntimeError):
     pass
+
+
+def _is_binary(f: IO) -> bool:
+    return isinstance(f.read(0), bytes)
 
 
 def _run(program, content, extra_args=[]):
     with path(hatanaka.bin, program) as executable:
         if isinstance(content, IOBase):
-            encoding = 'ascii' if not is_binary(content) else None
-            result = subprocess.run(
-                [str(executable), "-"] + extra_args, stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding)
+            encoding = 'ascii' if not _is_binary(content) else None
+            result = subprocess.run([str(executable), "-"] + extra_args,
+                                    stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding)
         else:
             encoding = 'ascii' if isinstance(content, str) else None
-            result = subprocess.run(
-                [str(executable), "-"] + extra_args, stdout=PIPE, stderr=PIPE, input=content, encoding=encoding)
+            result = subprocess.run([str(executable), "-"] + extra_args,
+                                    stdout=PIPE, stderr=PIPE, input=content, encoding=encoding)
 
     stderr = result.stderr
     if not encoding:
