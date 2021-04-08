@@ -2,7 +2,7 @@ import re
 
 import hatanaka.test
 import pytest
-from hatanaka import crx2rnx, rnx2crx
+from hatanaka import HatanakaException, crx2rnx, rnx2crx
 from importlib_resources import files
 
 crx_sample = files(hatanaka.test) / 'sample.crx'
@@ -95,6 +95,22 @@ def test_crx2rnx_str_stream(crx_str_stream, rnx_str):
 
 def test_crx2rnx_bytes_stream(crx_bytes_stream, rnx_bytes):
     assert clean(crx2rnx(crx_bytes_stream)) == clean(rnx_bytes)
+
+
+def test_invalid():
+    with pytest.raises(HatanakaException) as excinfo:
+        crx2rnx('blah')
+    msg = excinfo.value.args[0]
+    assert msg.startswith('The file seems to be truncated in the middle.')
+
+
+def test_warning(rnx_bytes, crx_bytes):
+    rnx_bytes += b'\0\0\0'
+    with pytest.warns(UserWarning) as record:
+        converted = rnx2crx(rnx_bytes)
+    assert clean(converted) == clean(crx_bytes)
+    assert len(record) == 1
+    assert record[0].message.args[0].startswith('rnx2crx: null characters')
 
 
 if __name__ == '__main__':
