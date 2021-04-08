@@ -43,21 +43,12 @@ def find_c_compiler(cc=None):
 
 
 setup(
-    name="hatanaka",
-    version="4.0.8.0",
-    author="Martin Valgur",
-    author_email="martin.valgur@gmail.com",
-    description="Compress/decompress RINEX observation files with Hatanaka compression",
-    long_description="",
     package_dir={"": "hatanaka"},
     packages=find_packages(where="hatanaka"),
-    python_requires=">=3.6",
     libraries=[
         ('rnx2crx', {'sources': ['rnxcmp/source/rnx2crx.c']}),
         ('crx2rnx', {'sources': ['rnxcmp/source/crx2rnx.c']})
     ],
     cmdclass={'build_clib': Build},
     zip_safe=False,
-    install_requires=['importlib_resources'],
-    extras_require={'test': ['pytest']},
 )
