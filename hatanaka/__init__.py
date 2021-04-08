@@ -11,12 +11,21 @@ from importlib_resources import path
 __all__ = ['rnx2crx', 'crx2rnx', 'HatanakaException']
 
 
-def rnx2crx(rnx_content: Union[AnyStr, IO]) -> AnyStr:
-    return _run('rnx2crx', rnx_content)
+def rnx2crx(rnx_content: Union[AnyStr, IO], reinit_every_nth: int = None, skip_strange: bool = False) -> AnyStr:
+    extra_args = []
+    if reinit_every_nth:
+        assert isinstance(reinit_every_nth, int)
+        extra_args += ['-e', '{:d}'.format(reinit_every_nth)]
+    if skip_strange:
+        extra_args += ['-s']
+    return _run('rnx2crx', rnx_content, extra_args)
 
 
-def crx2rnx(crx_content: Union[AnyStr, IO]) -> AnyStr:
-    return _run('crx2rnx', crx_content)
+def crx2rnx(crx_content: Union[AnyStr, IO], skip_strange: bool = False) -> AnyStr:
+    extra_args = []
+    if skip_strange:
+        extra_args = ['-s']
+    return _run('crx2rnx', crx_content, extra_args)
 
 
 def is_binary(f: IO) -> bool:
@@ -43,16 +52,18 @@ def _run(program, content, extra_args=[]):
         stderr = stderr.decode()
 
     if result.returncode not in (0, 2):
-        stderr = re.sub('^ *ERROR *: *', '', stderr, flags=re.M)
         stderr = re.sub('^ +', '', stderr, flags=re.M)
-        stderr = stderr.replace('\n', ' ')
+        stderr = re.sub('\n(?!WARNING|ERROR)', ' ', stderr)
+        stderr = re.sub('^ERROR *: *', '', stderr, flags=re.M)
         raise HatanakaException(stderr)
 
     if result.returncode == 2 and not stderr:
         warn(f'{program}: exited with an unspecified warning')
     if stderr:
-        stderr = re.sub('^ *WARNING *:? *', '', stderr, flags=re.M)
+        stderr = re.sub('^ +', '', stderr.strip(), flags=re.M)
         stderr = stderr.replace('\n', ' ')
+        stderr = re.sub('^ *WARNING *:? *', '\n', stderr, flags=re.M)
+        stderr = re.sub('^\n', '', stderr)
         warn(f'{program}: {stderr}')
 
     return result.stdout

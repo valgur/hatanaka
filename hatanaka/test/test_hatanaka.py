@@ -113,5 +113,25 @@ def test_warning(rnx_bytes, crx_bytes):
     assert record[0].message.args[0].startswith('rnx2crx: null characters')
 
 
+def test_rnx2crx_extra_args_good(rnx_str, crx_str):
+    converted = rnx2crx(rnx_str, reinit_every_nth=1, skip_strange=True)
+    assert clean(converted) == clean(crx_str)
+
+
+def test_rnx2crx_extra_args_warning(rnx_str, crx_str):
+    rnx_str = rnx_str.replace('R19 129262004.57708', 'G13 130321269.80108')
+    with pytest.warns(UserWarning) as record:
+        converted = rnx2crx(rnx_str, reinit_every_nth=1, skip_strange=True)
+    assert len(record) == 1
+    assert record[0].message.args[0] == 'rnx2crx: Duplicated satellite in one epoch at line 15. ... skip'
+    # Only the header remains
+    assert clean(crx_str).startswith(clean(crx_str))
+
+
+def test_crx2rnx_extra_args_good(rnx_str, crx_str):
+    converted = crx2rnx(crx_str, skip_strange=True)
+    assert clean(converted) == clean(rnx_str)
+
+
 if __name__ == '__main__':
     pytest.main()
