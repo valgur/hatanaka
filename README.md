@@ -54,7 +54,5 @@ Authority of Japan, 55, 21-30.
 (available at https://www.gsi.go.jp/ENGLISH/Bulletin55.html)
 
 ## License
-
-MIT – this Python library.
-
-RNXCMP software – see [LICENSE](LICENSE).
+This library is provided under the MIT license.
+Additional license terms apply from the included RNXCMP software – see [LICENSE](LICENSE).
