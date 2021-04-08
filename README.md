@@ -37,6 +37,9 @@ with open('observations.crx') as f:
 
 Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
 
+In addition to the Python library, the original `rnx2crx` and `crx2rnx` tools are also installed and made available from
+the command line.
+
 ## Changes
 
 See [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original source code package.
