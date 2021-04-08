@@ -30,7 +30,7 @@ def build(sources, output, cc):
     if cc.endswith("cl"):  # msvc-like
         cmd = [cc, *sources, "/Fe:" + output]
     else:
-        cmd = [cc, *sources, "-O3", "-Wno-unused-result", "-o", output]
+        cmd = [cc, *sources, "-O3", "-static", "-Wno-unused-result", "-o", output]
 
     print(" ".join(cmd))
     subprocess.check_call(cmd)
@@ -59,6 +59,7 @@ class bdist_wheel(_bdist_wheel):
         impl, abi_tag, plat_name = super().get_tag()
         impl = 'py3'
         abi_tag = 'none'
+        plat_name = plat_name.replace('linux', 'manylinux1')
         return impl, abi_tag, plat_name
 
 
