@@ -3,11 +3,12 @@ import shutil
 import subprocess
 
 from setuptools import setup
-from setuptools.command.build_clib import build_clib
-from setuptools.command.develop import develop
+from setuptools.command.build_clib import build_clib as _build_clib
+from setuptools.command.develop import develop as _develop
+from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
 
-class Build(build_clib):
+class build_clib(_build_clib):
     def build_libraries(self, libraries):
         cc = os.environ.get('CC')
         if cc is None:
@@ -45,12 +46,20 @@ def find_c_compiler(cc=None):
     return available[0]
 
 
-class Develop(develop):
+class develop(_develop):
     def run(self):
         self.run_command('build_clib')
         shutil.copy('build/lib/hatanaka/bin/rnx2crx', 'hatanaka/bin/')
         shutil.copy('build/lib/hatanaka/bin/crx2rnx', 'hatanaka/bin/')
         super().run()
+
+
+class bdist_wheel(_bdist_wheel):
+    def get_tag(self):
+        impl, abi_tag, plat_name = super().get_tag()
+        impl = 'py3'
+        abi_tag = 'none'
+        return impl, abi_tag, plat_name
 
 
 setup(
@@ -59,7 +68,8 @@ setup(
         ('crx2rnx', {'sources': ['rnxcmp/source/crx2rnx.c']})
     ],
     cmdclass={
-        'build_clib': Build,
-        'develop': Develop,
+        'build_clib': build_clib,
+        'develop': develop,
+        'bdist_wheel': bdist_wheel,
     }
 )
