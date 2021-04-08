@@ -47,7 +47,7 @@ setup(
     version="4.0.8.0",
     author="Martin Valgur",
     author_email="martin.valgur@gmail.com",
-    description="",
+    description="Compress/decompress RINEX observation files with Hatanaka compression",
     long_description="",
     package_dir={"": "hatanaka"},
     packages=find_packages(where="hatanaka"),
