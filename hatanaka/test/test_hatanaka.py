@@ -22,6 +22,18 @@ def rnx_str():
 
 
 @pytest.fixture
+def crx_str_stream():
+    with crx_sample.open('r', encoding='ascii') as f:
+        yield f
+
+
+@pytest.fixture
+def rnx_str_stream():
+    with rnx_sample.open('r', encoding='ascii') as f:
+        yield f
+
+
+@pytest.fixture
 def crx_bytes():
     with crx_sample.open('rb') as f:
         return f.read()
@@ -31,6 +43,18 @@ def crx_bytes():
 def rnx_bytes():
     with rnx_sample.open('rb') as f:
         return f.read()
+
+
+@pytest.fixture
+def crx_bytes_stream():
+    with crx_sample.open('rb') as f:
+        yield f
+
+
+@pytest.fixture
+def rnx_bytes_stream():
+    with rnx_sample.open('rb') as f:
+        yield f
 
 
 def clean(txt):
@@ -49,12 +73,28 @@ def test_rnx2crx_bytes(rnx_bytes, crx_bytes):
     assert clean(rnx2crx(rnx_bytes)) == clean(crx_bytes)
 
 
-def test_crx2rnx_str(rnx_str, crx_str):
+def test_crx2rnx_str(crx_str, rnx_str):
     assert crx2rnx(crx_str) == rnx_str
 
 
-def test_crx2rnx_bytes(rnx_bytes, crx_bytes):
+def test_crx2rnx_bytes(crx_bytes, rnx_bytes):
     assert clean(crx2rnx(crx_bytes)) == clean(rnx_bytes)
+
+
+def test_rnx2crx_str_stream(rnx_str_stream, crx_str):
+    assert clean(rnx2crx(rnx_str_stream)) == clean(crx_str)
+
+
+def test_rnx2crx_bytes_stream(rnx_bytes_stream, crx_bytes):
+    assert clean(rnx2crx(rnx_bytes_stream)) == clean(crx_bytes)
+
+
+def test_crx2rnx_str_stream(crx_str_stream, rnx_str):
+    assert crx2rnx(crx_str_stream) == rnx_str
+
+
+def test_crx2rnx_bytes_stream(crx_bytes_stream, rnx_bytes):
+    assert clean(crx2rnx(crx_bytes_stream)) == clean(rnx_bytes)
 
 
 if __name__ == '__main__':
