@@ -43,12 +43,16 @@ def find_c_compiler(cc=None):
 
 
 setup(
-    package_dir={"": "hatanaka"},
-    packages=find_packages(where="hatanaka"),
+    packages=find_packages(),
     libraries=[
         ('rnx2crx', {'sources': ['rnxcmp/source/rnx2crx.c']}),
         ('crx2rnx', {'sources': ['rnxcmp/source/crx2rnx.c']})
     ],
     cmdclass={'build_clib': Build},
     zip_safe=False,
+    include_package_data=True,
+    package_data={
+        'hatanaka.bin': ['rnx2crx', 'crx2rnx'],
+        'hatanaka.test': ['*.rnx', '*.crx'],
+    }
 )
