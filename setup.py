@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 
-from setuptools import find_packages, setup
+from setuptools import setup
 from setuptools.command.build_clib import build_clib
 
 
@@ -43,16 +43,9 @@ def find_c_compiler(cc=None):
 
 
 setup(
-    packages=find_packages(),
     libraries=[
         ('rnx2crx', {'sources': ['rnxcmp/source/rnx2crx.c']}),
         ('crx2rnx', {'sources': ['rnxcmp/source/crx2rnx.c']})
     ],
-    cmdclass={'build_clib': Build},
-    zip_safe=False,
-    include_package_data=True,
-    package_data={
-        'hatanaka.bin': ['rnx2crx', 'crx2rnx'],
-        'hatanaka.test': ['*.rnx', '*.crx'],
-    }
+    cmdclass={'build_clib': Build}
 )
