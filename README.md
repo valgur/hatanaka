@@ -24,11 +24,15 @@ pytest --pyargs hatanaka
 
 ## Usage
 
+Usage is simple and straightforward.
+
 ```python
 from hatanaka import rnx2crx, crx2rnx
 
 with open('observations.crx') as f:
-    rnx_data = crx2rnx(f)
+    rinex_data = crx2rnx(f)
+    # or
+    rinex_data = crx2rnx(f.read())
 ```
 
 Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
