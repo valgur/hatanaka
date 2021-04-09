@@ -26,4 +26,4 @@ jobs:
         run: |
           mkdir tmp
           cd tmp
-          pytest --pyargs hatanaka
+          pytest --pyargs hatanaka -vv

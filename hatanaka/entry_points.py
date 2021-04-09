@@ -1,3 +1,4 @@
+import platform
 import subprocess
 import sys
 
@@ -15,6 +16,8 @@ def crx2rnx():
 
 
 def _run(program):
+    if platform.system() == 'Windows':
+        program += '.exe'
     with path(hatanaka.bin, program) as executable:
         args = [executable] + sys.argv[1:]
         p = subprocess.Popen(args)

@@ -211,3 +211,5 @@ Temporary Items
 hatanaka/bin/*
 !hatanaka/bin/__init__.py
 .idea/
+*.obj
+*.o

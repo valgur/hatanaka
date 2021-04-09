@@ -72,8 +72,10 @@ def find_c_compiler(cc=None):
 class develop(_develop):
     def run(self):
         self.run_command('build_clib')
-        shutil.copy('build/lib/hatanaka/bin/rnx2crx', 'hatanaka/bin/')
-        shutil.copy('build/lib/hatanaka/bin/crx2rnx', 'hatanaka/bin/')
+        bin_dir = Path('build/lib/hatanaka/bin/')
+        binaries = list(bin_dir.glob('rnx2crx*')) + list(bin_dir.glob('crx2rnx*'))
+        for f in binaries:
+            shutil.copy(f, 'hatanaka/bin/')
         super().run()
 
 

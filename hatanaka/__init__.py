@@ -1,3 +1,4 @@
+import platform
 import re
 import subprocess
 from io import IOBase
@@ -5,8 +6,9 @@ from subprocess import PIPE
 from typing import AnyStr, IO, Union
 from warnings import warn
 
-import hatanaka.bin
 from importlib_resources import path
+
+import hatanaka.bin
 
 __all__ = ['rnx2crx', 'crx2rnx', 'HatanakaException']
 __version__ = '4.0.8.0'
@@ -97,7 +99,10 @@ def _is_binary(f: IO) -> bool:
 
 
 def _run(program, content, extra_args=[]):
-    with path(hatanaka.bin, program) as executable:
+    program_full = program
+    if platform.system() == 'Windows':
+        program_full = program + '.exe'
+    with path(hatanaka.bin, program_full) as executable:
         if isinstance(content, IOBase):
             encoding = 'ascii' if not _is_binary(content) else None
             result = subprocess.run([str(executable), "-"] + extra_args,

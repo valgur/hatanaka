@@ -61,7 +61,7 @@ def clean(txt):
     # Remove rnx2crx version number and timestamp for testing
     pattern = '^RNX2CRX.+CRINEX PROG / DATE$'
     if isinstance(txt, bytes):
-        return re.sub(pattern.encode(), b'', txt, flags=re.M).replace(b'\r', b'')
+        return re.sub(pattern.encode(), b'', txt.replace(b'\r', b''), flags=re.M)
     return re.sub(pattern, '', txt, flags=re.M)
 
 
@@ -125,7 +125,7 @@ def test_rnx2crx_extra_args_warning(rnx_str, crx_str):
     assert len(record) == 1
     assert record[0].message.args[0] == 'rnx2crx: Duplicated satellite in one epoch at line 15. ... skip'
     # Only the header remains
-    assert clean(crx_str).startswith(clean(crx_str))
+    assert clean(crx_str).startswith(clean(converted))
 
 
 def test_crx2rnx_extra_args_good(rnx_str, crx_str):
