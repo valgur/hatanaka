@@ -1,14 +1,14 @@
 name: Test
-on: [push, pull_request]
+on: [ push, pull_request ]
 jobs:
   test:
     name: ${{ matrix.install-mode }} | ${{ matrix.os }} | Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.6', '3.9']
-        install-mode: ['setup.py', 'sdist', 'wheel']
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        python-version: [ '3.6', '3.9' ]
+        install-mode: [ 'setup.py', 'sdist', 'wheel' ]
     steps:
       - uses: actions/checkout@v2
 
@@ -28,9 +28,11 @@ jobs:
           python -m pip install dist/hatanaka-*.tar.gz
       - name: wheel install
         if: ${{ matrix.install-mode == 'wheel' }}
+        env:
+          BUILD_STATIC: "${{ runner.os == 'Linux' && 'y' || 'n' }}"
         run: |
           python -m pip install wheel
-          BUILD_STATIC=y python setup.py bdist_wheel
+          python setup.py bdist_wheel
           ls dist/
           python -m pip install dist/hatanaka-*.whl
 
