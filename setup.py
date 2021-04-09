@@ -10,6 +10,7 @@ from setuptools.command.develop import develop as _develop
 class build_clib(_build_clib):
     def build_libraries(self, libraries):
         cc = os.environ.get('CC')
+        build_static = os.environ.get('BUILD_STATIC', False)
         if cc is None:
             if self.compiler.compiler:
                 # self.compiler.compiler content is ['gcc', '-pthread', '-Wl,--sysroot=/', ...]
@@ -20,17 +21,19 @@ class build_clib(_build_clib):
         os.makedirs(output_dir, exist_ok=True)
         for executable, build_info in libraries:
             output = os.path.join(output_dir, executable)
-            build(build_info['sources'], output, cc)
+            build(build_info['sources'], output, cc, build_static)
 
 
-def build(sources, output, cc):
+def build(sources, output, cc, build_static=False):
     if not all(os.path.isfile(src) for src in sources):
         raise FileNotFoundError(sources)
 
     if cc.endswith("cl"):  # msvc-like
         cmd = [cc, *sources, "/Fe:" + output]
     else:
-        cmd = [cc, *sources, "-O3", "-static", "-Wno-unused-result", "-o", output]
+        cmd = [cc, *sources, "-O3", "-Wno-unused-result", "-o", output]
+        if build_static:
+            cmd.append("-static")
 
     print(" ".join(cmd))
     subprocess.check_call(cmd)
