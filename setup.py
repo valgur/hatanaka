@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_clib import build_clib as _build_clib
@@ -22,16 +23,17 @@ class build_clib(_build_clib):
                 cc = self.compiler.compiler_so[0]
             if not cc:
                 cc = find_c_compiler()
-        output_dir = 'build/lib/hatanaka/bin'
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = Path('build/lib/hatanaka/bin')
+        output_dir.mkdir(parents=True, exist_ok=True)
         for executable, build_info in libraries:
-            output = os.path.join(output_dir, executable)
+            output = output_dir / executable
             build(build_info['sources'], output, cc, build_static)
 
 
 def build(sources, output, cc, build_static=False):
-    if not all(os.path.isfile(src) for src in sources):
+    if not all(Path(src).is_file() for src in sources):
         raise FileNotFoundError(sources)
+    output = str(output)
 
     if cc.replace('.exe', '').endswith('cl'):  # msvc-like
         cmd = [cc, *sources, '/Fe:' + output]
