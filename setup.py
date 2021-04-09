@@ -40,7 +40,7 @@ def build(sources, output, cc, build_static=False, include_dirs=None, library_di
     output = str(output)
 
     if cc.replace('.exe', '').endswith('cl'):  # msvc-like
-        cmd = [cc, *sources, '/nologo', '/O2', '/W3', '/Fe:' + output]
+        cmd = [cc, *sources, '/nologo', '/O2', '/Fe:' + output]
         if include_dirs:
             cmd += ['/I' + inc_dir for inc_dir in include_dirs]
         if library_dirs:
