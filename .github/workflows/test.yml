@@ -1,5 +1,19 @@
 name: Test
-on: [ push, pull_request ]
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'LICENSE'
+      - '.gitignore'
+      - 'rnxcmp/front-end-tools/**'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'LICENSE'
+      - '.gitignore'
+      - 'rnxcmp/front-end-tools/**'
 jobs:
   test:
     name: ${{ matrix.install-mode }} | ${{ matrix.os }} | Python ${{ matrix.python-version }}
