@@ -37,8 +37,16 @@ with open('observations.crx') as f:
 
 Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
 
-In addition to the Python library, the original `rnx2crx` and `crx2rnx` tools are also installed and made available from
-the command line.
+In addition to the above, the original `rnx2crx` and `crx2rnx` tools are made available from
+the command line as well and also within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
+These can be convenient for working directly with files on disk:
+
+```python
+from hatanaka.cli import crx2rnx
+
+# creates a decompressed 1lsu0010.21o file
+crx2rnx(['1lsu0010.21d'])
+```
 
 ## Changes
 

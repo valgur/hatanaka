@@ -9,6 +9,7 @@ from warnings import warn
 from importlib_resources import path
 
 import hatanaka.bin
+from hatanaka import cli
 
 __all__ = ['rnx2crx', 'crx2rnx', 'HatanakaException']
 __version__ = '4.0.8.0'

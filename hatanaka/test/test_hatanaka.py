@@ -1,9 +1,12 @@
 import re
+import shutil
+
+import pytest
+from importlib_resources import files
 
 import hatanaka.test
-import pytest
 from hatanaka import HatanakaException, crx2rnx, rnx2crx
-from importlib_resources import files
+from hatanaka.cli import crx2rnx as crx2rnx_cli, rnx2crx as rnx2crx_cli
 
 crx_sample = files(hatanaka.test) / 'sample.crx'
 rnx_sample = files(hatanaka.test) / 'sample.rnx'
@@ -123,7 +126,8 @@ def test_rnx2crx_extra_args_warning(rnx_str, crx_str):
     with pytest.warns(UserWarning) as record:
         converted = rnx2crx(rnx_str, reinit_every_nth=1, skip_strange=True)
     assert len(record) == 1
-    assert record[0].message.args[0] == 'rnx2crx: Duplicated satellite in one epoch at line 15. ... skip'
+    assert (record[0].message.args[0] ==
+            'rnx2crx: Duplicated satellite in one epoch at line 15. ... skip')
     # Only the header remains
     assert clean(crx_str).startswith(clean(converted))
 
@@ -131,6 +135,30 @@ def test_rnx2crx_extra_args_warning(rnx_str, crx_str):
 def test_crx2rnx_extra_args_good(rnx_str, crx_str):
     converted = crx2rnx(crx_str, skip_strange=True)
     assert clean(converted) == clean(rnx_str)
+
+
+def test_rnx2crx_cli(tmp_path, crx_str):
+    sample_path = tmp_path / rnx_sample.name
+    shutil.copy(rnx_sample, sample_path)
+    rnx2crx_cli([str(sample_path)])
+    expected_path = tmp_path / (rnx_sample.stem + '.crx')
+    assert expected_path.exists()
+    with expected_path.open() as f:
+        result = f.read()
+    assert clean(result) == clean(crx_str)
+    shutil.rmtree(tmp_path)
+
+
+def test_crx2rnx_cli(tmp_path, rnx_str):
+    sample_path = tmp_path / crx_sample.name
+    shutil.copy(crx_sample, sample_path)
+    crx2rnx_cli([str(sample_path)])
+    expected_path = tmp_path / (crx_sample.stem + '.rnx')
+    assert expected_path.exists()
+    with expected_path.open() as f:
+        result = f.read()
+    assert clean(result) == clean(rnx_str)
+    shutil.rmtree(tmp_path)
 
 
 if __name__ == '__main__':
