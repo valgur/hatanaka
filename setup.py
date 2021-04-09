@@ -17,6 +17,7 @@ class build_clib(_build_clib):
             else:
                 cc = find_c_compiler()
         output_dir = 'build/lib/hatanaka/bin'
+        os.makedirs(output_dir, exist_ok=True)
         for executable, build_info in libraries:
             output = os.path.join(output_dir, executable)
             build(build_info['sources'], output, cc)
