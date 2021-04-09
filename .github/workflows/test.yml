@@ -3,12 +3,14 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  build_wheels:
+  test:
     name: Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
+#        os: [ubuntu-latest, windows-latest, macOS-latest]
+        os: [windows-latest]
 
     steps:
       - uses: actions/checkout@v2

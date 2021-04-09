@@ -12,10 +12,15 @@ class build_clib(_build_clib):
         cc = os.environ.get('CC')
         build_static = os.environ.get('BUILD_STATIC', False)
         if cc is None:
-            if self.compiler.compiler:
-                # self.compiler.compiler content is ['gcc', '-pthread', '-Wl,--sysroot=/', ...]
-                cc = self.compiler.compiler[0]
-            else:
+            if self.compiler.compiler_type == 'msvc':
+                self.compiler.initialize()
+                cc = self.compiler.cc
+            elif self.compiler.compiler_type == 'bcpp':
+                cc = 'bcpp'
+            elif hasattr(self.compiler, 'compiler_so') and self.compiler.compiler_so:
+                # looks like ['gcc', '-pthread', '-Wl,--sysroot=/', ...]
+                cc = self.compiler.compiler_so[0]
+            if not cc:
                 cc = find_c_compiler()
         output_dir = 'build/lib/hatanaka/bin'
         os.makedirs(output_dir, exist_ok=True)
@@ -28,24 +33,24 @@ def build(sources, output, cc, build_static=False):
     if not all(os.path.isfile(src) for src in sources):
         raise FileNotFoundError(sources)
 
-    if cc.endswith("cl"):  # msvc-like
-        cmd = [cc, *sources, "/Fe:" + output]
+    if cc.replace('.exe', '').endswith('cl'):  # msvc-like
+        cmd = [cc, *sources, '/Fe:' + output]
     else:
-        cmd = [cc, *sources, "-O3", "-Wno-unused-result", "-o", output]
+        cmd = [cc, *sources, '-O3', '-Wno-unused-result', '-o', output]
         if build_static:
-            cmd.append("-static")
+            cmd.append('-static')
 
-    print(" ".join(cmd))
+    print(' '.join(cmd))
     subprocess.check_call(cmd)
 
 
 def find_c_compiler(cc=None):
-    compilers = ["cc", "gcc", "clang", "icc", "icl", "cl", "clang-cl"]
+    compilers = ['cc', 'gcc', 'clang', 'icc', 'icl', 'cl', 'clang-cl']
     if cc is not None:
         compilers = [cc] + compilers
     available = list(filter(shutil.which, compilers))
     if not available:
-        raise FileNotFoundError("No C compiler found on PATH")
+        raise FileNotFoundError('No C compiler found on PATH')
     return available[0]
 
 
