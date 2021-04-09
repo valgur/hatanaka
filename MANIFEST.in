@@ -1,0 +1,3 @@
+# needed for sdist
+include hatanaka/test/*.rnx
+include hatanaka/test/*.crx
