@@ -11,7 +11,7 @@ from setuptools.command.develop import develop as _develop
 class build_clib(_build_clib):
     def build_libraries(self, libraries):
         cc = os.environ.get('CC')
-        build_static = os.environ.get('BUILD_STATIC', False)
+        build_static = os.environ.get('BUILD_STATIC', 'n') == 'y'
         include_dirs = None
         library_dirs = None
         if cc is None:

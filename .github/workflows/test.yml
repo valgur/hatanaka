@@ -1,29 +1,42 @@
-name: Build
-
+name: Test
 on: [push, pull_request]
-
 jobs:
   test:
-    name: Test on ${{ matrix.os }}
+    name: ${{ matrix.install-mode }} | ${{ matrix.os }} | Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.6', '3.9']
+        install-mode: ['setup.py', 'sdist', 'wheel']
     steps:
       - uses: actions/checkout@v2
 
-      # Used to host cibuildwheel
-      - uses: actions/setup-python@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install
+      - name: setup.py install
+        if: ${{ matrix.install-mode == 'setup.py' }}
+        run: python setup.py install
+      - name: sdist install
+        if: ${{ matrix.install-mode == 'sdist' }}
         run: |
-          python setup.py install
-          python -m pip install .[tests]
+          python setup.py sdist
+          ls dist/
+          python -m pip install dist/hatanaka-*.tar.gz
+      - name: wheel install
+        if: ${{ matrix.install-mode == 'wheel' }}
+        run: |
+          python -m pip install wheel
+          BUILD_STATIC=y python setup.py bdist_wheel
+          ls dist/
+          python -m pip install dist/hatanaka-*.whl
 
       - name: Test
         run: |
           mkdir tmp
           cd tmp
+          python -m pip install pytest
           pytest --pyargs hatanaka -vv
