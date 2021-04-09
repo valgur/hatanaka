@@ -5,7 +5,6 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_clib import build_clib as _build_clib
-from setuptools.command.develop import develop as _develop
 
 
 class build_clib(_build_clib):
@@ -32,6 +31,10 @@ class build_clib(_build_clib):
         for executable, build_info in libraries:
             output = output_dir / executable
             build(build_info['sources'], output, cc, build_static, include_dirs, library_dirs)
+
+        # copy to source dir as well for easier testing
+        for f in list(output_dir.glob('rnx2crx*')) + list(output_dir.glob('crx2rnx*')):
+            shutil.copy(f, 'hatanaka/bin/')
 
 
 def build(sources, output, cc, build_static=False, include_dirs=None, library_dirs=None):
@@ -69,20 +72,7 @@ def find_c_compiler(cc=None):
     return available[0]
 
 
-class develop(_develop):
-    def run(self):
-        self.run_command('build_clib')
-        bin_dir = Path('build/lib/hatanaka/bin/')
-        binaries = list(bin_dir.glob('rnx2crx*')) + list(bin_dir.glob('crx2rnx*'))
-        for f in binaries:
-            shutil.copy(f, 'hatanaka/bin/')
-        super().run()
-
-
-cmdclass = {
-    'build_clib': build_clib,
-    'develop': develop,
-}
+cmdclass = {'build_clib': build_clib}
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
