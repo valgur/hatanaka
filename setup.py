@@ -13,11 +13,13 @@ class build_clib(_build_clib):
         cc = os.environ.get('CC')
         build_static = os.environ.get('BUILD_STATIC', False)
         include_dirs = None
+        library_dirs = None
         if cc is None:
             if self.compiler.compiler_type == 'msvc':
                 self.compiler.initialize()
                 cc = self.compiler.cc
                 include_dirs = self.compiler.include_dirs
+                library_dirs = self.compiler.library_dirs
             elif self.compiler.compiler_type == 'bcpp':
                 cc = 'bcpp'
             elif hasattr(self.compiler, 'compiler_so') and self.compiler.compiler_so:
@@ -29,10 +31,10 @@ class build_clib(_build_clib):
         output_dir.mkdir(parents=True, exist_ok=True)
         for executable, build_info in libraries:
             output = output_dir / executable
-            build(build_info['sources'], output, cc, build_static, include_dirs)
+            build(build_info['sources'], output, cc, build_static, include_dirs, library_dirs)
 
 
-def build(sources, output, cc, build_static=False, include_dirs=None):
+def build(sources, output, cc, build_static=False, include_dirs=None, library_dirs=None):
     if not all(Path(src).is_file() for src in sources):
         raise FileNotFoundError(sources)
     output = str(output)
@@ -41,10 +43,15 @@ def build(sources, output, cc, build_static=False, include_dirs=None):
         cmd = [cc, *sources, '/nologo', '/O2', '/W3', '/Fe:' + output]
         if include_dirs:
             cmd += ['/I' + inc_dir for inc_dir in include_dirs]
+        if library_dirs:
+            cmd += ['/link']
+            cmd += ['/LIBPATH:' + library_dir for library_dir in library_dirs]
     else:
         cmd = [cc, *sources, '-O3', '-Wno-unused-result', '-o', output]
         if include_dirs:
             cmd += ['-I' + inc_dir for inc_dir in include_dirs]
+        if library_dirs:
+            cmd += ['-L' + library_dir for library_dir in library_dirs]
         if build_static:
             cmd.append('-static')
 
