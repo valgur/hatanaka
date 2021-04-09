@@ -25,7 +25,7 @@ jobs:
         run: |
           python setup.py sdist
           ls dist/
-          python -m pip install dist/hatanaka-*.tar.gz
+          python .github/pip.py install dist/hatanaka-*.tar.gz
       - name: wheel install
         if: ${{ matrix.install-mode == 'wheel' }}
         env:
@@ -34,7 +34,7 @@ jobs:
           python -m pip install wheel
           python setup.py bdist_wheel
           ls dist/
-          python -m pip install dist/hatanaka-*.whl
+          python .github/pip.py install dist/hatanaka-*.whl
 
       - name: Test
         run: |
