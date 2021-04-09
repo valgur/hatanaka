@@ -9,8 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-#        os: [ubuntu-latest, windows-latest, macOS-latest]
-        os: [windows-latest]
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -25,5 +24,6 @@ jobs:
 
       - name: Test
         run: |
-          cd /tmp
+          mkdir tmp
+          cd tmp
           pytest --pyargs hatanaka
