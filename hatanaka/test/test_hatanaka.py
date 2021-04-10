@@ -161,5 +161,15 @@ def test_crx2rnx_cli(tmp_path, rnx_str):
     shutil.rmtree(tmp_path)
 
 
+def test_stderr_bad_encoding(crx_bytes):
+    """The errors and warnings can include cited garbage from invalid files
+    and we should handle that gracefully."""
+    with pytest.raises(HatanakaException) as excinfo:
+        crx2rnx(crx_bytes[:-1] + b'\xFF\0')
+    msg = excinfo.value.args[0]
+    assert msg.startswith('The file seems to be truncated')
+    assert msg.endswith('\\xff<end')
+
+
 if __name__ == '__main__':
     pytest.main()

@@ -1,12 +1,8 @@
-import platform
 import re
-import subprocess
 from io import IOBase
 from subprocess import PIPE
 from typing import AnyStr, IO, Union
 from warnings import warn
-
-from importlib_resources import path
 
 import hatanaka.bin
 from hatanaka import cli
@@ -100,30 +96,32 @@ def _is_binary(f: IO) -> bool:
 
 
 def _run(program, content, extra_args=[]):
-    program_full = program
-    if platform.system() == 'Windows':
-        program_full = program + '.exe'
-    with path(hatanaka.bin, program_full) as executable:
-        if isinstance(content, IOBase):
-            encoding = 'ascii' if not _is_binary(content) else None
-            result = subprocess.run([str(executable), "-"] + extra_args,
-                                    stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding)
-        else:
-            encoding = 'ascii' if isinstance(content, str) else None
-            result = subprocess.run([str(executable), "-"] + extra_args,
-                                    stdout=PIPE, stderr=PIPE, input=content, encoding=encoding)
+    if isinstance(content, IOBase):
+        encoding = 'ascii' if not _is_binary(content) else None
+        proc = cli._popen(program, ['-'] + extra_args,
+                          stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding)
+        stdout, stderr = proc.communicate()
+    else:
+        encoding = 'ascii' if isinstance(content, str) else None
+        proc = cli._popen(program, ['-'] + extra_args,
+                          stdout=PIPE, stderr=PIPE, stdin=PIPE, encoding=encoding)
+        stdout, stderr = proc.communicate(content)
+    retcode = proc.poll()
 
-    stderr = result.stderr
-    if not encoding:
-        stderr = stderr.decode()
+    _check(program, retcode, stderr)
+    return stdout
 
-    if result.returncode not in (0, 2):
+
+def _check(program, retcode, stderr):
+    """Raise HatanakaException on errors and report warnings"""
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode('ascii', errors='backslashreplace').strip()
+    if retcode not in (0, 2):
         stderr = re.sub('^ +', '', stderr, flags=re.M)
         stderr = re.sub('\n(?!WARNING|ERROR)', ' ', stderr)
         stderr = re.sub('^ERROR *: *', '', stderr, flags=re.M)
         raise HatanakaException(stderr)
-
-    if result.returncode == 2 and not stderr:
+    if retcode == 2 and not stderr:
         warn(f'{program}: exited with an unspecified warning')
     if stderr:
         stderr = re.sub('^ +', '', stderr.strip(), flags=re.M)
@@ -131,5 +129,3 @@ def _run(program, content, extra_args=[]):
         stderr = re.sub('^ *WARNING *:? *', '\n', stderr, flags=re.M)
         stderr = re.sub('^\n', '', stderr)
         warn(f'{program}: {stderr}')
-
-    return result.stdout
