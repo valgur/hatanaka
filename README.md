@@ -18,18 +18,18 @@ with open('observations.crx') as f:
     rinex_data = crx2rnx(f.read())
 ```
 
-Any errors during processing will be raised as a `HatanakaException` and any non-critical problems reported as warnings.
-
-Additionally, the original `rnx2crx` and `crx2rnx` tools are also made available from
-the command line and from within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
-The latter can be convenient for working directly with files on disk:
+Alternatively, either function can also be applied directly to a file on disk.
 
 ```python
-from hatanaka.cli import crx2rnx
+from hatanaka import rnx2crx_file, crx2rnx_file
 
-# creates a decompressed 1lsu0010.21o file
-crx2rnx(['1lsu0010.21d'])
+rinex_path = crx2rnx_file('1lsu0010.21d')
+assert rinex_path == '1lsu0010.21o'
 ```
+
+Any errors during processing will be raised as a `HatanakaException` and any non-critical problems reported as warnings.
+
+In addition to the above, the original `rnx2crx` and `crx2rnx` tools are made available from the command line as well.
 
 ## Installation
 
@@ -48,7 +48,9 @@ pytest --pyargs hatanaka
 
 ### Building from source
 
-Installing from git source code repo is also an option, in which case the RNXCMP tools will be built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
+Installing from git source code repo is also an option, in which case the RNXCMP tools will be built in the process.
+This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`.
+If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
 
 ```bash
 pip install git+https://github.com/valgur/hatanaka
