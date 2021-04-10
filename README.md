@@ -22,7 +22,7 @@ pytest --pyargs hatanaka
 
 ### Building from source
 
-When installing from the git repository, the RNXCMP tools are built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
+Another option is to install from the git source code repo, in which case the RNXCMP tools will be built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
 
 ```bash
 pip install git+https://github.com/valgur/hatanaka
@@ -43,8 +43,8 @@ with open('observations.crx') as f:
 
 Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
 
-Additionally, the original `rnx2crx` and `crx2rnx` tools are made available from
-the command line as well and also from within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
+Additionally, the original `rnx2crx` and `crx2rnx` tools are also made available from
+the command line and from within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
 The latter can be convenient for working directly with files on disk:
 
 ```python
