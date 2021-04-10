@@ -8,8 +8,10 @@ from warnings import warn
 import hatanaka.bin
 from hatanaka import cli
 
-__all__ = ['rnx2crx', 'crx2rnx', 'rnx2crx_file', 'crx2rnx_file', 'HatanakaException']
-__version__ = '4.0.8.0'
+__version__ = '1.0.0'
+rnxcmp_version = '4.0.8'
+__all__ = ['rnx2crx', 'crx2rnx', 'rnx2crx_file', 'crx2rnx_file', 'HatanakaException',
+           'rnxcmp_version']
 
 
 def rnx2crx(rnx_content: Union[AnyStr, IO], reinit_every_nth: int = None,
