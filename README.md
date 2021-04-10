@@ -1,4 +1,4 @@
-# Hatanaka [![Build](https://github.com/valgur/hatanaka/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/valgur/hatanaka/actions/workflows/build.yml) ![PyPI](https://img.shields.io/pypi/v/hatanaka)
+# Hatanaka [![Build](https://github.com/valgur/hatanaka/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/valgur/hatanaka/actions/workflows/build.yml) [![PyPI](https://img.shields.io/pypi/v/hatanaka)](https://pypi.org/project/hatanaka/)
 
 Hatanaka compression / decompression of RINEX observation files within Python.
 
