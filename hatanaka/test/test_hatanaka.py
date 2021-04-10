@@ -161,6 +161,18 @@ def test_crx2rnx_cli(tmp_path, rnx_str):
     shutil.rmtree(tmp_path)
 
 
+def test_non_ascii_is_tolerated(rnx_bytes, crx_bytes):
+    def add_non_ascii(txt):
+        return txt.replace(
+            b'VERSION / TYPE',
+            b'VERSION / TYPE' + 'õäü'.encode().ljust(60) + b'COMMENT\n')
+
+    converted = crx2rnx(add_non_ascii(crx_bytes))
+    assert clean(converted) == clean(add_non_ascii(rnx_bytes))
+    converted = rnx2crx(add_non_ascii(rnx_bytes))
+    assert clean(converted) == clean(add_non_ascii(crx_bytes))
+
+
 def test_stderr_bad_encoding(crx_bytes):
     """The errors and warnings can include cited garbage from invalid files
     and we should handle that gracefully."""

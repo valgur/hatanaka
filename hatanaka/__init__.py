@@ -96,15 +96,22 @@ def _is_binary(f: IO) -> bool:
 
 
 def _run(program, content, extra_args=[]):
+    encoding = None
+    errors = None
     if isinstance(content, IOBase):
-        encoding = 'ascii' if not _is_binary(content) else None
+        if not _is_binary(content):
+            encoding = 'ascii'
+            # let's be relaxed about non-ascii symbols as long as it decodes successfully
+            errors = 'ignore'
         proc = cli._popen(program, ['-'] + extra_args,
-                          stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding)
+                          stdout=PIPE, stderr=PIPE, stdin=content, encoding=encoding, errors=errors)
         stdout, stderr = proc.communicate()
     else:
-        encoding = 'ascii' if isinstance(content, str) else None
+        if isinstance(content, str):
+            encoding = 'ascii'
+            errors = 'ignore'
         proc = cli._popen(program, ['-'] + extra_args,
-                          stdout=PIPE, stderr=PIPE, stdin=PIPE, encoding=encoding)
+                          stdout=PIPE, stderr=PIPE, stdin=PIPE, encoding=encoding, errors=errors)
         stdout, stderr = proc.communicate(content)
     retcode = proc.poll()
 
