@@ -56,7 +56,7 @@ crx2rnx(['1lsu0010.21d'])
 
 ## Changes
 
-See [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original source code package.
+See [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
 ## Attribution
 
