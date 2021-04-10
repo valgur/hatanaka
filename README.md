@@ -2,7 +2,7 @@
 
 Hatanaka compression / decompression of RINEX observation files within Python.
 
-Wraps the [RNX2CRX and CRX2RNX tools](https://terras.gsi.go.jp/ja/crx2rnx.html) by Y. Hatanaka of the Geospatial
+Wraps the original [RNXCMP tools](https://terras.gsi.go.jp/ja/crx2rnx.html) by Y. Hatanaka of the Geospatial
 Information Authority of Japan (GSI).
 
 ## Usage
