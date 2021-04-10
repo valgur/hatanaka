@@ -1,4 +1,4 @@
-# Hatanaka
+# Hatanaka [![Build](https://github.com/valgur/hatanaka/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/valgur/hatanaka/actions/workflows/build.yml) ![PyPI](https://img.shields.io/pypi/v/hatanaka)
 
 Hatanaka compression / decompression of RINEX observation files within Python.
 
@@ -7,19 +7,25 @@ Information Authority of Japan (GSI).
 
 ## Installation
 
-Requires Python 3.6+ and a C compiler when installing from source.
+Python 3.6+ is required. Binary wheels are available from PyPI for Linux, MacOS and Windows.
 
 ```bash
-pip install git+https://github.com/valgur/hatanaka
+pip install hatanaka
 ```
 
-If a C compiler is not available on `PATH`, you can instead provide a path to one with the `CC` environment variable.
-
-To ensure that everything is working as expected run the included tests with
+To ensure that everything is working as expected, it is recommended to run the included tests with
 
 ```bash
 pip install pytest
 pytest --pyargs hatanaka
+```
+
+### Building from source
+
+When installing from the git repository, the RNXCMP tools are built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
+
+```bash
+pip install git+https://github.com/valgur/hatanaka
 ```
 
 ## Usage
@@ -37,9 +43,9 @@ with open('observations.crx') as f:
 
 Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
 
-In addition to the above, the original `rnx2crx` and `crx2rnx` tools are made available from
-the command line as well and also within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
-These can be convenient for working directly with files on disk:
+Additionally, the original `rnx2crx` and `crx2rnx` tools are made available from
+the command line as well and also from within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
+The latter can be convenient for working directly with files on disk:
 
 ```python
 from hatanaka.cli import crx2rnx
