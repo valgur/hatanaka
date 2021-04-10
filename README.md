@@ -7,7 +7,7 @@ Information Authority of Japan (GSI).
 
 ## Usage
 
-Simple and straightforward.
+Usage is simple and straightforward.
 
 ```python
 from hatanaka import rnx2crx, crx2rnx
