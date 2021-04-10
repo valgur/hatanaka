@@ -5,32 +5,9 @@ Hatanaka compression / decompression of RINEX observation files within Python.
 Wraps the [RNX2CRX and CRX2RNX tools](https://terras.gsi.go.jp/ja/crx2rnx.html) by Y. Hatanaka of the Geospatial
 Information Authority of Japan (GSI).
 
-## Installation
-
-Python 3.6+ is required. Binary wheels are available from PyPI for Linux, MacOS and Windows.
-
-```bash
-pip install hatanaka
-```
-
-To ensure that everything is working as expected, it is recommended to run the included tests with
-
-```bash
-pip install pytest
-pytest --pyargs hatanaka
-```
-
-### Building from source
-
-Another option is to install from the git source code repo, in which case the RNXCMP tools will be built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
-
-```bash
-pip install git+https://github.com/valgur/hatanaka
-```
-
 ## Usage
 
-Usage is simple and straightforward.
+Simple and straightforward.
 
 ```python
 from hatanaka import rnx2crx, crx2rnx
@@ -41,7 +18,7 @@ with open('observations.crx') as f:
     rinex_data = crx2rnx(f.read())
 ```
 
-Any errors during processing will be raised as a `HatanakaException` and any non-critical problems raised as warnings.
+Any errors during processing will be raised as a `HatanakaException` and any non-critical problems reported as warnings.
 
 Additionally, the original `rnx2crx` and `crx2rnx` tools are also made available from
 the command line and from within Python as `hatanaka.cli.rnx2crx` and `hatanaka.cli.crx2rnx`.
@@ -52,6 +29,29 @@ from hatanaka.cli import crx2rnx
 
 # creates a decompressed 1lsu0010.21o file
 crx2rnx(['1lsu0010.21d'])
+```
+
+## Installation
+
+Binary wheels are available from PyPI for Linux, MacOS and Windows. Python versions 3.6+ are supported.
+
+```bash
+pip install hatanaka
+```
+
+To ensure that everything is working as expected, it is recommended to also run the included tests.
+
+```bash
+pip install pytest
+pytest --pyargs hatanaka
+```
+
+### Building from source
+
+Installing from git source code repo is also an option, in which case the RNXCMP tools will be built in the process. This assumes a C compiler is available and is usually picked up automatically by Python's `setuptools`. If that is not the case, you can instead provide a path to one by setting the `CC` environment variable.
+
+```bash
+pip install git+https://github.com/valgur/hatanaka
 ```
 
 ## Changes
