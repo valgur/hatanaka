@@ -58,7 +58,8 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
 
     parser = argparse.ArgumentParser(description='Compress RINEX files')
     parser.add_argument('files', type=Path, nargs='*', help='RINEX files')
-    parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'none'])
+    parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'none'],
+                        help='which compression to apply in addition to Hatanaka compression')
     parser.add_argument(
         '-s', '--skip-strange-epochs', action='store_true',
         help='warn and skip strange epochs instead of raising an exception')
