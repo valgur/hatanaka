@@ -1,5 +1,6 @@
 import bz2
 import gzip
+import re
 import zipfile
 from io import BytesIO, IOBase
 from pathlib import Path
@@ -35,9 +36,13 @@ def decompress(f: Union[Path, str, IO, BytesIO], *, skip_strange_epochs: bool = 
 
 
 def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = False) -> Path:
-    with Path(path).open('rb') as f:
+    path = Path(path)
+    with path.open('rb') as f:
         is_obs, txt = _decompress(f, skip_strange_epochs=skip_strange_epochs)
     out_path = get_decompressed_path(path, is_obs)
+    if out_path == path:
+        # file does not need decompressing
+        return out_path
     with out_path.open('w', encoding='ascii', errors='ignore') as f_out:
         f_out.write(txt)
     return out_path
@@ -52,18 +57,17 @@ def get_decompressed_path(path, is_obs):
         parts.pop()
     suffix = parts[-1]
     if is_obs:
-        if len(suffix) == 3 and suffix[2] == 'd':
+        is_valid = re.match(r'^(?:crx|rnx|\d\d[od])$', suffix, flags=re.I)
+        if not is_valid:
+            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
+        if suffix[2] == 'd':
             suffix = suffix[:2] + 'o'
-        elif len(suffix) == 3 and suffix[2] == 'D':
+        elif suffix[2] == 'D':
             suffix = suffix[:2] + 'O'
         elif suffix == 'crx':
             suffix = 'rnx'
         elif suffix == 'CRX':
             suffix = 'RNX'
-        elif suffix.lower() == 'rnx':
-            pass
-        else:
-            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
     out_path = path.parent / '.'.join(parts[:-1] + [suffix])
     return out_path
 
@@ -85,7 +89,11 @@ def compress(f: Union[Path, str, IO, BytesIO], *, compression: str = 'gz',
 def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
                      skip_strange_epochs: bool = False,
                      reinit_every_nth: int = None) -> Path:
-    is_obs, txt = _compress(Path(path).read_bytes(), compression=compression,
+    path = Path(path)
+    if path.name.lower().endswith(('.gz', '.bz2', '.z', '.zip')):
+        # already compressed
+        return path
+    is_obs, txt = _compress(path.read_bytes(), compression=compression,
                             skip_strange_epochs=skip_strange_epochs,
                             reinit_every_nth=reinit_every_nth)
     out_path = get_compressed_path(path, is_obs, compression)
@@ -100,16 +108,17 @@ def get_compressed_path(path, is_obs, compression='gz'):
         raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
     suffix = parts[-1]
     if is_obs:
-        if len(suffix) == 3 and suffix[2] == 'o':
+        is_valid = re.match(r'^(?:crx|rnx|\d\d[od])$', suffix, flags=re.I)
+        if not is_valid:
+            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
+        if suffix[2] == 'o':
             suffix = suffix[:2] + 'd'
-        elif len(suffix) == 3 and suffix[2] == 'O':
+        elif suffix[2] == 'O':
             suffix = suffix[:2] + 'D'
         elif suffix == 'rnx':
             suffix = 'crx'
         elif suffix == 'RNX':
             suffix = 'CRX'
-        else:
-            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
     out_parts = parts[:-1] + [suffix]
     if compression != 'none':
         out_parts.append(compression)
@@ -194,4 +203,5 @@ def _compress_hatanaka(txt: bytes, skip_strange_epochs, reinit_every_nth) -> (bo
         return is_obs, rnx2crx(txt, skip_strange_epochs=skip_strange_epochs,
                                reinit_every_nth=reinit_every_nth)
     else:
+        is_obs = b'COMPACT RINEX' in txt[:80]
         return is_obs, txt

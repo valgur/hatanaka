@@ -25,6 +25,8 @@ decompress_pairs = [
     ('.rnx.Z', '.rnx'),
     ('.rnx.zip', '.rnx'),
     ('.rnx.bz2', '.rnx'),
+    ('.21o', '.21o'),
+    ('.21o.gz', '.21o'),
 ]
 
 
@@ -37,6 +39,8 @@ def test_decompress(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix
     in_file = 'sample' + input_suffix
     for x in ['.21d', '.21D', '.CRX']:
         in_file = in_file.replace(x, '.crx')
+    for x in ['.21o']:
+        in_file = in_file.replace(x, '.rnx')
     shutil.copy(get_data_path(in_file), sample_path)
     converted = decompress(sample_path)
     assert clean(converted) == clean(rnx_str)
@@ -54,6 +58,8 @@ def test_decompress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, expecte
     in_file = 'sample' + input_suffix
     for x in ['.21d', '.21D', '.CRX']:
         in_file = in_file.replace(x, '.crx')
+    for x in ['.21o']:
+        in_file = in_file.replace(x, '.rnx')
     shutil.copy(get_data_path(in_file), sample_path)
     out_path = decompress_on_disk(sample_path)
     assert out_path.exists()
@@ -88,6 +94,10 @@ compress_pairs = [
     ('.RNX', 'gz', '.CRX.gz'),
     ('.21o', 'bz2', '.21d.bz2'),
     ('.21O', 'gz', '.21D.gz'),
+    ('.crx', 'gz', '.crx.gz'),
+    ('.21d', 'gz', '.21d.gz'),
+    ('.crx', 'none', '.crx'),
+    ('.21d', 'none', '.21d'),
 ]
 
 
@@ -100,6 +110,8 @@ def test_compress(tmp_path, crx_sample, rnx_str, input_suffix, compression, expe
     in_file = 'sample' + input_suffix
     for x in ['.21o', '.21O', '.RNX']:
         in_file = in_file.replace(x, '.rnx')
+    for x in ['.21d']:
+        in_file = in_file.replace(x, '.crx')
     shutil.copy(get_data_path(in_file), sample_path)
     converted = compress(sample_path, compression=compression)
     assert clean(decompress(io.BytesIO(converted))) == clean(rnx_str)
@@ -118,6 +130,8 @@ def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compressi
     in_file = 'sample' + input_suffix
     for x in ['.21o', '.21O', '.RNX']:
         in_file = in_file.replace(x, '.rnx')
+    for x in ['.21d']:
+        in_file = in_file.replace(x, '.crx')
     shutil.copy(get_data_path(in_file), sample_path)
     out_path = compress_on_disk(sample_path, compression=compression)
     assert out_path.exists()
@@ -146,3 +160,21 @@ def test_non_binary_stream(crx_str, rnx_str):
         decompress(io.StringIO(crx_str))
     with pytest.raises(ValueError):
         compress(io.StringIO(rnx_str))
+
+
+@pytest.mark.parametrize(
+    'input_name',
+    ['sample', 'sample.crxx', 'sample.abo', 'sample.abd', 'sample.21dd']
+)
+def test_invalid_name(tmp_path, rnx_sample, input_name):
+    sample_path = tmp_path / input_name
+    shutil.copy(rnx_sample, sample_path)
+    with pytest.raises(ValueError) as excinfo:
+        decompress_on_disk(sample_path)
+    msg = excinfo.value.args[0]
+    assert msg.endswith('is not a valid RINEX file name')
+    with pytest.raises(ValueError) as excinfo:
+        compress_on_disk(sample_path)
+    msg = excinfo.value.args[0]
+    assert msg.endswith('is not a valid RINEX file name')
+    shutil.rmtree(tmp_path)
