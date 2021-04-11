@@ -43,9 +43,9 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
 
     if len(args.files) == 0:
         with _record_warnings() as warning_list:
-            decompressed = decompress(sys.stdin.buffer,
+            decompressed = decompress(sys.stdin.buffer.read(),
                                       skip_strange_epochs=args.skip_strange_epochs)
-            sys.stdout.buffer.write(decompressed.encode('ascii', 'ignore'))
+            sys.stdout.buffer.write(decompressed)
 
     if len(warning_list) > 0:
         return 2
@@ -93,7 +93,7 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
     if len(args.files) == 0:
         with _record_warnings() as warning_list:
             compressed = compress(
-                sys.stdin.buffer,
+                sys.stdin.buffer.read(),
                 compression=args.compression,
                 skip_strange_epochs=args.skip_strange_epochs,
                 reinit_every_nth=args.reinit_every_nth)

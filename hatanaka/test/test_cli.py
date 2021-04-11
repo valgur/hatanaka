@@ -56,7 +56,7 @@ def test_decompress_cli(tmp_path, crx_sample, rnx_str, input_suffix, expected_su
     'input_suffix, compression, expected_suffix',
     compress_pairs
 )
-def test_compress_cli(tmp_path, crx_sample, rnx_str, input_suffix, compression,
+def test_compress_cli(tmp_path, crx_sample, rnx_bytes, input_suffix, compression,
                       expected_suffix):
     # prepare
     in_file = 'sample' + input_suffix
@@ -72,7 +72,7 @@ def test_compress_cli(tmp_path, crx_sample, rnx_str, input_suffix, compression,
     expected_path = tmp_path / ('sample' + expected_suffix)
     assert sample_path.exists()
     assert expected_path.exists()
-    assert clean(decompress(expected_path)) == clean(rnx_str)
+    assert clean(decompress(expected_path)) == clean(rnx_bytes)
 
 
 def test_decompress_cli_stdin(rnx_bytes):
@@ -88,10 +88,10 @@ def test_compress_cli_stdin(rnx_bytes):
         compress_cli([])
     result = stdout.getvalue()
     assert clean(result) != clean(rnx_bytes)
-    assert clean(decompress(io.BytesIO(result)).encode()) == clean(rnx_bytes)
+    assert clean(decompress(result)) == clean(rnx_bytes)
 
 
-def test_cli_delete(tmp_path, rnx_str):
+def test_cli_delete(tmp_path, rnx_bytes):
     # prepare
     in_file = 'sample.rnx'
     sample_path = tmp_path / in_file
@@ -103,10 +103,10 @@ def test_cli_delete(tmp_path, rnx_str):
     expected_path = tmp_path / 'sample.crx.gz'
     assert not sample_path.exists()
     assert expected_path.exists()
-    assert clean(decompress(expected_path)) == clean(rnx_str)
+    assert clean(decompress(expected_path)) == clean(rnx_bytes)
 
 
-def test_cli_no_delete_on_warnings(tmp_path, rnx_str):
+def test_cli_no_delete_on_warnings(tmp_path, rnx_bytes):
     # prepare
     in_file = 'sample.rnx'
     sample_path = tmp_path / in_file
@@ -122,7 +122,7 @@ def test_cli_no_delete_on_warnings(tmp_path, rnx_str):
     expected_path = tmp_path / 'sample.crx.gz'
     assert sample_path.exists()
     assert expected_path.exists()
-    assert clean(decompress(expected_path)) == clean(rnx_str)
+    assert clean(decompress(expected_path)) == clean(rnx_bytes)
 
 
 def test_cli_no_delete_unchanged(tmp_path, rnx_str):

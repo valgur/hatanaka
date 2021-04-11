@@ -2,11 +2,9 @@ import bz2
 import gzip
 import re
 import zipfile
-from io import BytesIO, IOBase
+from io import BytesIO
 from pathlib import Path
-from typing import BinaryIO, Union
-
-from typing.io import IO
+from typing import Union
 
 from .hatanaka import crx2rnx, rnx2crx
 
@@ -21,30 +19,23 @@ __all__ = [
 ]
 
 
-def decompress(f: Union[Path, str, BytesIO, BinaryIO], *,
-               skip_strange_epochs: bool = False) -> str:
-    if isinstance(f, (Path, str)):
-        with Path(f).open('rb') as ff:
-            return _decompress(ff, skip_strange_epochs)[1]
-    elif isinstance(f, IOBase):
-        if not f.seekable():
-            raise ValueError('input stream must be seekable')
-        if not isinstance(f.read(0), bytes):
-            raise ValueError('input stream must be binary')
-        return _decompress(f, skip_strange_epochs)[1]
-    else:
-        raise ValueError('input must be either a path or a binary stream')
+def decompress(content: Union[Path, str, bytes], *,
+               skip_strange_epochs: bool = False) -> bytes:
+    if isinstance(content, (Path, str)):
+        content = _decompress(Path(content).read_bytes(), skip_strange_epochs)[1]
+    elif not isinstance(content, bytes):
+        raise ValueError('input must be either a path or a binary string')
+    return _decompress(content, skip_strange_epochs)[1]
 
 
 def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = False) -> Path:
     path = Path(path)
-    with path.open('rb') as f:
-        is_obs, txt = _decompress(f, skip_strange_epochs=skip_strange_epochs)
+    is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
     out_path = get_decompressed_path(path, is_obs)
     if out_path == path:
         # file does not need decompressing
         return out_path
-    with out_path.open('w', encoding='ascii', errors='ignore') as f_out:
+    with out_path.open('wb') as f_out:
         f_out.write(txt)
     return out_path
 
@@ -73,18 +64,14 @@ def get_decompressed_path(path, is_obs):
     return out_path
 
 
-def compress(f: Union[Path, str, BytesIO, BinaryIO], *, compression: str = 'gz',
+def compress(content: Union[Path, str, bytes], *, compression: str = 'gz',
              skip_strange_epochs: bool = False,
              reinit_every_nth: int = None) -> bytes:
-    if isinstance(f, (Path, str)):
-        txt = Path(f).read_bytes()
-        return _compress(txt, compression, skip_strange_epochs, reinit_every_nth)[1]
-    elif isinstance(f, IOBase):
-        if not isinstance(f.read(0), bytes):
-            raise ValueError('input stream must be binary')
-        return _compress(f.read(), compression, skip_strange_epochs, reinit_every_nth)[1]
-    else:
-        raise ValueError('input must be either a path or a binary stream')
+    if isinstance(content, (Path, str)):
+        content = Path(content).read_bytes()
+    elif not isinstance(content, bytes):
+        raise ValueError('input must be either a path or a binary string')
+    return _compress(content, compression, skip_strange_epochs, reinit_every_nth)[1]
 
 
 def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
@@ -143,20 +130,17 @@ def _is_bz2(magic_bytes: bytes) -> bool:
     return magic_bytes == b'\x42\x5A'
 
 
-def _decompress(f_in: IO, skip_strange_epochs: bool) -> (bool, str):
-    magic_bytes = f_in.read(2)
-    f_in.seek(0)
-    if len(magic_bytes) != 2:
+def _decompress(txt: bytes, skip_strange_epochs: bool) -> (bool, bytes):
+    if len(txt) < 2:
         raise ValueError('empty file')
+    magic_bytes = txt[:2]
 
     if _is_gz(magic_bytes):
-        with gzip.open(f_in, 'rb') as f:
-            return _decompress_hatanaka(f.read(), skip_strange_epochs)
+        return _decompress_hatanaka(gzip.decompress(txt), skip_strange_epochs)
     if _is_bz2(magic_bytes):
-        with bz2.open(f_in, 'rb') as f:
-            return _decompress_hatanaka(f.read(), skip_strange_epochs)
+        return _decompress_hatanaka(bz2.decompress(txt), skip_strange_epochs)
     elif _is_zip(magic_bytes):
-        with zipfile.ZipFile(f_in, 'r') as z:
+        with zipfile.ZipFile(BytesIO(txt), 'r') as z:
             flist = z.namelist()
             if len(flist) == 0:
                 raise ValueError('zip archive is empty')
@@ -165,12 +149,12 @@ def _decompress(f_in: IO, skip_strange_epochs: bool) -> (bool, str):
             with z.open(flist[0], 'r') as f:
                 return _decompress_hatanaka(f.read(), skip_strange_epochs)
     elif _is_lzw(magic_bytes):
-        return _decompress_hatanaka(unlzw(f_in.read()), skip_strange_epochs)
+        return _decompress_hatanaka(unlzw(txt), skip_strange_epochs)
     else:
-        return _decompress_hatanaka(f_in.read(), skip_strange_epochs)
+        return _decompress_hatanaka(txt, skip_strange_epochs)
 
 
-def _decompress_hatanaka(txt: bytes, skip_strange_epochs) -> (bool, str):
+def _decompress_hatanaka(txt: bytes, skip_strange_epochs) -> (bool, bytes):
     if len(txt) < 80:
         raise ValueError('file is too short to be a valid RINEX file')
 
@@ -178,7 +162,7 @@ def _decompress_hatanaka(txt: bytes, skip_strange_epochs) -> (bool, str):
     if is_crinex:
         txt = crx2rnx(txt, skip_strange_epochs=skip_strange_epochs)
     is_obs = b'OBSERVATION DATA' in txt[:80]
-    return is_obs, txt.decode('ascii', 'ignore')
+    return is_obs, txt
 
 
 def _compress(txt: bytes, compression, skip_strange_epochs, reinit_every_nth) -> (bool, bytes):

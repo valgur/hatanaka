@@ -34,7 +34,7 @@ decompress_pairs = [
     'input_suffix, expected_suffix',
     decompress_pairs
 )
-def test_decompress(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix):
+def test_decompress(tmp_path, crx_sample, rnx_bytes, input_suffix, expected_suffix):
     # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
     in_file = 'sample' + input_suffix
@@ -42,16 +42,16 @@ def test_decompress(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix
     # decompress
     converted = decompress(sample_path)
     # check
-    assert clean(converted) == clean(rnx_str)
-    converted = decompress(io.BytesIO(sample_path.read_bytes()))
-    assert clean(converted) == clean(rnx_str)
+    assert clean(converted) == clean(rnx_bytes)
+    converted = decompress(sample_path.read_bytes())
+    assert clean(converted) == clean(rnx_bytes)
 
 
 @pytest.mark.parametrize(
     'input_suffix, expected_suffix',
     decompress_pairs
 )
-def test_decompress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix):
+def test_decompress_on_disk(tmp_path, crx_sample, rnx_bytes, input_suffix, expected_suffix):
     # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
     in_file = 'sample' + input_suffix
@@ -61,7 +61,7 @@ def test_decompress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, expecte
     # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + expected_suffix)
-    assert clean(out_path.read_text()) == clean(rnx_str)
+    assert clean(out_path.read_bytes()) == clean(rnx_bytes)
 
 
 def make_nav(txt):
@@ -103,7 +103,7 @@ compress_pairs = [
     'input_suffix, compression, expected_suffix',
     compress_pairs
 )
-def test_compress(tmp_path, crx_sample, rnx_str, input_suffix, compression, expected_suffix):
+def test_compress(tmp_path, crx_sample, rnx_bytes, input_suffix, compression, expected_suffix):
     # prepare
     in_file = 'sample' + input_suffix
     sample_path = tmp_path / in_file
@@ -111,16 +111,16 @@ def test_compress(tmp_path, crx_sample, rnx_str, input_suffix, compression, expe
     # compress
     converted = compress(sample_path, compression=compression)
     # check
-    assert clean(decompress(io.BytesIO(converted))) == clean(rnx_str)
-    converted = compress(io.BytesIO(sample_path.read_bytes()), compression=compression)
-    assert clean(decompress(io.BytesIO(converted))) == clean(rnx_str)
+    assert clean(decompress(converted)) == clean(rnx_bytes)
+    converted = compress(sample_path.read_bytes(), compression=compression)
+    assert clean(decompress(converted)) == clean(rnx_bytes)
 
 
 @pytest.mark.parametrize(
     'input_suffix, compression, expected_suffix',
     compress_pairs
 )
-def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compression,
+def test_compress_on_disk(tmp_path, crx_sample, rnx_bytes, input_suffix, compression,
                           expected_suffix):
     # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
@@ -131,7 +131,7 @@ def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compressi
     # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + expected_suffix)
-    assert clean(decompress(out_path)) == clean(rnx_str)
+    assert clean(decompress(out_path)) == clean(rnx_bytes)
 
 
 @pytest.mark.parametrize(
@@ -148,14 +148,14 @@ def test_compress_non_obs(tmp_path, rnx_bytes, input_suffix):
     # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + input_suffix + '.gz')
-    assert clean(decompress(out_path).encode()) == clean(txt)
+    assert clean(decompress(out_path)) == clean(txt)
 
 
-def test_non_binary_stream(crx_str, rnx_str):
+def test_invalid_input(crx_str, rnx_bytes):
     with pytest.raises(ValueError):
-        decompress(io.StringIO(crx_str))
+        decompress(io.BytesIO(rnx_bytes))
     with pytest.raises(ValueError):
-        compress(io.StringIO(rnx_str))
+        compress(io.BytesIO(rnx_bytes))
 
 
 @pytest.mark.parametrize(
