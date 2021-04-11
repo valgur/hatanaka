@@ -1,11 +1,12 @@
 import platform
 import re
 import subprocess
-from importlib.resources import path
 from io import IOBase
 from subprocess import PIPE
 from typing import AnyStr, IO, Union
 from warnings import warn
+
+from importlib_resources import path
 
 import hatanaka.bin
 
