@@ -35,18 +35,16 @@ decompress_pairs = [
     decompress_pairs
 )
 def test_decompress(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix):
+    # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
     in_file = 'sample' + input_suffix
-    for x in ['.21d', '.21D', '.CRX']:
-        in_file = in_file.replace(x, '.crx')
-    for x in ['.21o']:
-        in_file = in_file.replace(x, '.rnx')
     shutil.copy(get_data_path(in_file), sample_path)
+    # decompress
     converted = decompress(sample_path)
+    # check
     assert clean(converted) == clean(rnx_str)
     converted = decompress(io.BytesIO(sample_path.read_bytes()))
     assert clean(converted) == clean(rnx_str)
-    shutil.rmtree(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -54,18 +52,16 @@ def test_decompress(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix
     decompress_pairs
 )
 def test_decompress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, expected_suffix):
+    # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
     in_file = 'sample' + input_suffix
-    for x in ['.21d', '.21D', '.CRX']:
-        in_file = in_file.replace(x, '.crx')
-    for x in ['.21o']:
-        in_file = in_file.replace(x, '.rnx')
     shutil.copy(get_data_path(in_file), sample_path)
+    # decompress
     out_path = decompress_on_disk(sample_path)
+    # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + expected_suffix)
     assert clean(out_path.read_text()) == clean(rnx_str)
-    shutil.rmtree(tmp_path)
 
 
 def make_nav(txt):
@@ -77,14 +73,16 @@ def make_nav(txt):
     ['.rnx', '.RNX', '.21n']
 )
 def test_decompress_non_obs(tmp_path, rnx_bytes, input_suffix):
+    # prepare
     txt = make_nav(rnx_bytes)
     sample_path = tmp_path / ('sample' + input_suffix + '.gz')
     sample_path.write_bytes(gzip.compress(txt))
+    # decompress
     out_path = decompress_on_disk(sample_path)
+    # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + input_suffix)
     assert clean(out_path.read_bytes()) == clean(txt)
-    shutil.rmtree(tmp_path)
 
 
 compress_pairs = [
@@ -106,18 +104,16 @@ compress_pairs = [
     compress_pairs
 )
 def test_compress(tmp_path, crx_sample, rnx_str, input_suffix, compression, expected_suffix):
-    sample_path = tmp_path / ('sample' + input_suffix)
+    # prepare
     in_file = 'sample' + input_suffix
-    for x in ['.21o', '.21O', '.RNX']:
-        in_file = in_file.replace(x, '.rnx')
-    for x in ['.21d']:
-        in_file = in_file.replace(x, '.crx')
+    sample_path = tmp_path / in_file
     shutil.copy(get_data_path(in_file), sample_path)
+    # compress
     converted = compress(sample_path, compression=compression)
+    # check
     assert clean(decompress(io.BytesIO(converted))) == clean(rnx_str)
     converted = compress(io.BytesIO(sample_path.read_bytes()), compression=compression)
     assert clean(decompress(io.BytesIO(converted))) == clean(rnx_str)
-    shutil.rmtree(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -126,18 +122,16 @@ def test_compress(tmp_path, crx_sample, rnx_str, input_suffix, compression, expe
 )
 def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compression,
                           expected_suffix):
+    # prepare
     sample_path = tmp_path / ('sample' + input_suffix)
     in_file = 'sample' + input_suffix
-    for x in ['.21o', '.21O', '.RNX']:
-        in_file = in_file.replace(x, '.rnx')
-    for x in ['.21d']:
-        in_file = in_file.replace(x, '.crx')
     shutil.copy(get_data_path(in_file), sample_path)
+    # compress
     out_path = compress_on_disk(sample_path, compression=compression)
+    # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + expected_suffix)
     assert clean(decompress(out_path)) == clean(rnx_str)
-    shutil.rmtree(tmp_path)
 
 
 @pytest.mark.parametrize(
@@ -145,14 +139,16 @@ def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compressi
     ['.rnx', '.RNX', '.21n']
 )
 def test_compress_non_obs(tmp_path, rnx_bytes, input_suffix):
+    # prepare
     txt = make_nav(rnx_bytes)
     sample_path = tmp_path / ('sample' + input_suffix)
     sample_path.write_bytes(txt)
+    # compress
     out_path = compress_on_disk(sample_path)
+    # check
     assert out_path.exists()
     assert out_path == tmp_path / ('sample' + input_suffix + '.gz')
     assert clean(decompress(out_path).encode()) == clean(txt)
-    shutil.rmtree(tmp_path)
 
 
 def test_non_binary_stream(crx_str, rnx_str):
@@ -177,4 +173,3 @@ def test_invalid_name(tmp_path, rnx_sample, input_name):
         compress_on_disk(sample_path)
     msg = excinfo.value.args[0]
     assert msg.endswith('is not a valid RINEX file name')
-    shutil.rmtree(tmp_path)

@@ -25,7 +25,7 @@ def rnx2crx(rnx_content: Union[AnyStr, IO], *, reinit_every_nth: int = None,
         When some part of the Compact RINEX file is lost, the data can not be recovered
         thereafter until all the data arc are initialized for differential operation.
         This option may be used to increase chances to recover parts of data by using the
-        skip_strange option of crx2rnx at the cost of increase of file size.
+        skip_strange option of crx2rnx at the cost of increasing the file size.
     skip_strange_epochs : bool, default False
         Warn and skip strange epochs instead of raising an exception.
 
@@ -44,7 +44,7 @@ def rnx2crx(rnx_content: Union[AnyStr, IO], *, reinit_every_nth: int = None,
     Any non-critical problems during compression will be raised as warnings.
     """
     extra_args = []
-    if reinit_every_nth:
+    if reinit_every_nth is not None and reinit_every_nth > 0:
         assert isinstance(reinit_every_nth, int)
         extra_args += ['-e', '{:d}'.format(reinit_every_nth)]
     if skip_strange_epochs:

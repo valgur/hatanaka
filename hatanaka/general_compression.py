@@ -4,7 +4,7 @@ import re
 import zipfile
 from io import BytesIO, IOBase
 from pathlib import Path
-from typing import Union
+from typing import BinaryIO, Union
 
 from typing.io import IO
 
@@ -21,7 +21,8 @@ __all__ = [
 ]
 
 
-def decompress(f: Union[Path, str, IO, BytesIO], *, skip_strange_epochs: bool = False) -> str:
+def decompress(f: Union[Path, str, BytesIO, BinaryIO], *,
+               skip_strange_epochs: bool = False) -> str:
     if isinstance(f, (Path, str)):
         with Path(f).open('rb') as ff:
             return _decompress(ff, skip_strange_epochs)[1]
@@ -72,7 +73,7 @@ def get_decompressed_path(path, is_obs):
     return out_path
 
 
-def compress(f: Union[Path, str, IO, BytesIO], *, compression: str = 'gz',
+def compress(f: Union[Path, str, BytesIO, BinaryIO], *, compression: str = 'gz',
              skip_strange_epochs: bool = False,
              reinit_every_nth: int = None) -> bytes:
     if isinstance(f, (Path, str)):

@@ -7,6 +7,12 @@ import hatanaka.test.data
 
 
 def get_data_path(fname):
+    for x in ['.21o', '.rnx']:
+        fname = fname.replace(x.lower(), '.rnx')
+        fname = fname.replace(x.upper(), '.rnx')
+    for x in ['.21d', '.crx']:
+        fname = fname.replace(x.lower(), '.crx')
+        fname = fname.replace(x.upper(), '.crx')
     return files(hatanaka.test.data) / fname
 
 
