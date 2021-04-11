@@ -1,3 +1,4 @@
+import gzip
 import io
 import shutil
 
@@ -61,6 +62,25 @@ def test_decompress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, expecte
     shutil.rmtree(tmp_path)
 
 
+def make_nav(txt):
+    return txt.replace(b'OBSERVATION', b'NAVIGATION ')
+
+
+@pytest.mark.parametrize(
+    'input_suffix',
+    ['.rnx', '.RNX', '.21n']
+)
+def test_decompress_non_obs(tmp_path, rnx_bytes, input_suffix):
+    txt = make_nav(rnx_bytes)
+    sample_path = tmp_path / ('sample' + input_suffix + '.gz')
+    sample_path.write_bytes(gzip.compress(txt))
+    out_path = decompress_on_disk(sample_path)
+    assert out_path.exists()
+    assert out_path == tmp_path / ('sample' + input_suffix)
+    assert clean(out_path.read_bytes()) == clean(txt)
+    shutil.rmtree(tmp_path)
+
+
 compress_pairs = [
     ('.rnx', 'none', '.crx'),
     ('.rnx', 'gz', '.crx.gz'),
@@ -104,3 +124,25 @@ def test_compress_on_disk(tmp_path, crx_sample, rnx_str, input_suffix, compressi
     assert out_path == tmp_path / ('sample' + expected_suffix)
     assert clean(decompress(out_path)) == clean(rnx_str)
     shutil.rmtree(tmp_path)
+
+
+@pytest.mark.parametrize(
+    'input_suffix',
+    ['.rnx', '.RNX', '.21n']
+)
+def test_compress_non_obs(tmp_path, rnx_bytes, input_suffix):
+    txt = make_nav(rnx_bytes)
+    sample_path = tmp_path / ('sample' + input_suffix)
+    sample_path.write_bytes(txt)
+    out_path = compress_on_disk(sample_path)
+    assert out_path.exists()
+    assert out_path == tmp_path / ('sample' + input_suffix + '.gz')
+    assert clean(decompress(out_path).encode()) == clean(txt)
+    shutil.rmtree(tmp_path)
+
+
+def test_non_binary_stream(crx_str, rnx_str):
+    with pytest.raises(ValueError):
+        decompress(io.StringIO(crx_str))
+    with pytest.raises(ValueError):
+        compress(io.StringIO(rnx_str))
