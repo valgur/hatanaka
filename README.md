@@ -7,9 +7,22 @@ Supports all compression formats allowed by the RINEX 2 and 3 standards:
 * Hatanaka compression for Observation Data Files,
 * LZW (.Z), gzip (.gz), bzip2 (.bz2) and .zip.
 
-## Usage
+## Quick Start
 
-Usage is simple and straightforward.
+### Installation
+
+Wheels are available from PyPI for Linux, MacOS and Windows. Python versions 3.6 and up are supported.
+
+```bash
+pip install hatanaka
+```
+
+To ensure that everything is working as expected, it is recommended to also run the included tests.
+
+```bash
+pip install pytest
+pytest --pyargs hatanaka
+```
 
 ### Python
 
@@ -57,20 +70,7 @@ rinex-compress 1lsu0010.21o
 rinex-decompress < 1lsu0010.21d.Z | grep 'SYS / # / OBS TYPES'
 ```
 
-## Installation
-
-Wheels are available from PyPI for Linux, MacOS and Windows. Python versions 3.6 and up are supported.
-
-```bash
-pip install hatanaka
-```
-
-To ensure that everything is working as expected, it is recommended to also run the included tests.
-
-```bash
-pip install pytest
-pytest --pyargs hatanaka
-```
+## Development
 
 ### Building from source
 
