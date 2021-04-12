@@ -1,4 +1,4 @@
-# Hatanaka [![Build](https://github.com/valgur/hatanaka/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/valgur/hatanaka/actions/workflows/build.yml) [![codecov](https://codecov.io/gh/valgur/hatanaka/branch/main/graph/badge.svg?token=7TBLMZ8Wi9)](https://codecov.io/gh/valgur/hatanaka) [![PyPI](https://img.shields.io/pypi/v/hatanaka)](https://pypi.org/project/hatanaka/)
+# Hatanaka [![Build](https://github.com/valgur/hatanaka/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/valgur/hatanaka/actions/workflows/build.yml) [![codecov](https://codecov.io/gh/valgur/hatanaka/branch/master/graph/badge.svg?token=7TBLMZ8Wi9)](https://codecov.io/gh/valgur/hatanaka) [![PyPI](https://img.shields.io/pypi/v/hatanaka)](https://pypi.org/project/hatanaka/)
 
 Effortless compression / decompression of RINEX files in Python and on the command line.
 
