@@ -9,6 +9,8 @@ from typing import Union
 from .hatanaka import crx2rnx, rnx2crx
 
 try:
+    # unlzw is implemented in C and more efficient that Python-based unlzw3.
+    # Much more difficult to install, though.
     from unlzw import unlzw
 except ImportError:
     from unlzw3 import unlzw
@@ -21,6 +23,41 @@ __all__ = [
 
 def decompress(content: Union[Path, str, bytes], *,
                skip_strange_epochs: bool = False) -> bytes:
+    """Decompress compressed RINEX files.
+
+    Any RINEX files compressed with Hatanaka compression (.crx|.##d) and/or with a conventional
+    compression format (.gz|.Z|.zip|.bz2) are decompressed to their plain RINEX counterpart.
+    Already decompressed files are returned as is.
+
+    Compression type is deduced automatically from the file contents.
+    File extensions are not validated (as is done in decompress_on_disk()).
+
+    Parameters
+    ----------
+    content : Path or str or bytes
+        Path to a compressed RINEX file or file contents as a bytes object.
+    skip_strange_epochs : bool, default False
+        For Hatanaka decompression.
+        Warn and skip strange epochs instead of raising an exception.
+        This option may be used for salvaging usable data when middle of the Compact
+        RINEX file is missing. The data after the missing part, are, however, useless
+        until the compression operation of all data are initialized at some epoch.
+        Using this together with of reinit_every_nth option of rnx2crx may be effective.
+        Caution: It is assumed that no change in the list of data types happens in the
+        lost part of the data.
+
+    Returns
+    -------
+    bytes
+        Decompressed RINEX file contents.
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during Hatanaka decompression.
+    ValueError
+        For invalid file contents.
+    """
     if isinstance(content, (Path, str)):
         content = _decompress(Path(content).read_bytes(), skip_strange_epochs)[1]
     elif not isinstance(content, bytes):
@@ -29,6 +66,42 @@ def decompress(content: Union[Path, str, bytes], *,
 
 
 def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = False) -> Path:
+    """Decompress compressed RINEX files and write the resulting file to disk.
+
+    Any RINEX files compressed with Hatanaka compression (.crx|.##d) and/or with a conventional
+    compression format (.gz|.Z|.zip|.bz2) are decompressed to their plain RINEX counterpart.
+    Already decompressed files are ignored.
+
+    Compression type is deduced automatically from the file contents.
+    Input file extensions are loosely validated to assign a correct extension
+    to the decompressed file.
+
+    Parameters
+    ----------
+    path : Path or str
+        Path to a compressed RINEX file.
+    skip_strange_epochs : bool, default False
+        For Hatanaka decompression.
+        Warn and skip strange epochs instead of raising an exception.
+        This option may be used for salvaging usable data when middle of the Compact
+        RINEX file is missing. The data after the missing part, are, however, useless
+        until the compression operation of all data are initialized at some epoch.
+        Using this together with of reinit_every_nth option of rnx2crx may be effective.
+        Caution: It is assumed that no change in the list of data types happens in the
+        lost part of the data.
+
+    Returns
+    -------
+    Path
+        Path to the decompressed RINEX file.
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during Hatanaka decompression.
+    ValueError
+        For invalid file contents.
+    """
     path = Path(path)
     is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
     out_path = get_decompressed_path(path, is_obs)
@@ -40,7 +113,22 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
     return out_path
 
 
-def get_decompressed_path(path, is_obs):
+def get_decompressed_path(path: Union[Path, str], is_obs: bool) -> Path:
+    """Get the decompressed path corresponding to a compressed RINEX file after decompression.
+
+    Parameters
+    ----------
+    path : path or str
+        Path to the compression RINEX file.
+    is_obs : bool
+        Whether the RINEX file contains observation data.
+        Needed for correct renaming of Hatanaka-compressed files.
+
+    Returns
+    -------
+    Path
+        The path of the resulting RINEX file after decompression.
+    """
     path = Path(path)
     parts = path.name.split('.')
     if len(parts) <= 1:
@@ -67,6 +155,38 @@ def get_decompressed_path(path, is_obs):
 def compress(content: Union[Path, str, bytes], *, compression: str = 'gz',
              skip_strange_epochs: bool = False,
              reinit_every_nth: int = None) -> bytes:
+    """Compress RINEX files.
+
+    Applies Hatanaka (if observation data) and optionally a conventional compression (gzip by default)
+    to the provided RINEX file. Already compressed files are returned as is.
+
+    Parameters
+    ----------
+    content : Path or str or bytes
+        Path to a RINEX file or file contents as a bytes object.
+    compression : 'gz' (default), 'bz2', or 'none'
+        Which compression (if any) to apply in addition to the Hatanaka compression.
+    skip_strange_epochs : bool, default False
+        For Hatanaka compression. Warn and skip strange epochs instead of raising an exception.
+    reinit_every_nth : int, optional
+        For Hatanaka compression. Initialize the compression operation at every # epochs.
+        When some part of the Compact RINEX file is lost, the data can not be recovered
+        thereafter until all the data arc are initialized for differential operation.
+        This option may be used to increase chances to recover parts of data by using the
+        skip_strange option of crx2rnx at the cost of increasing the file size.
+
+    Returns
+    -------
+    bytes
+        Compressed RINEX file contents.
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during Hatanaka compression.
+    ValueError
+        For invalid file contents.
+    """
     if isinstance(content, (Path, str)):
         content = Path(content).read_bytes()
     elif not isinstance(content, bytes):
@@ -77,6 +197,38 @@ def compress(content: Union[Path, str, bytes], *, compression: str = 'gz',
 def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
                      skip_strange_epochs: bool = False,
                      reinit_every_nth: int = None) -> Path:
+    """Compress RINEX files.
+
+    Applies Hatanaka (if observation data) and optionally a conventional compression (gzip by default)
+    to the provided RINEX file. Already compressed files are ignored.
+
+    Parameters
+    ----------
+    path : Path or str
+        Path to a RINEX file.
+    compression : 'gz' (default), 'bz2', or 'none'
+        Which compression (if any) to apply in addition to the Hatanaka compression.
+    skip_strange_epochs : bool, default False
+        For Hatanaka compression. Warn and skip strange epochs instead of raising an exception.
+    reinit_every_nth : int, optional
+        For Hatanaka compression. Initialize the compression operation at every # epochs.
+        When some part of the Compact RINEX file is lost, the data can not be recovered
+        thereafter until all the data arc are initialized for differential operation.
+        This option may be used to increase chances to recover parts of data by using the
+        skip_strange option of crx2rnx at the cost of increasing the file size.
+
+    Returns
+    -------
+    Path
+        Path to the compressed RINEX file.
+
+    Raises
+    ------
+    HatanakaException
+        On any errors during Hatanaka compression.
+    ValueError
+        For invalid file contents.
+    """
     path = Path(path)
     if path.name.lower().endswith(('.gz', '.bz2', '.z', '.zip')):
         # already compressed
@@ -90,6 +242,23 @@ def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
 
 
 def get_compressed_path(path, is_obs, compression='gz'):
+    """Get the compressed path corresponding to a RINEX file after compression.
+
+    Parameters
+    ----------
+    path : path or str
+        Path to the compression RINEX file.
+    is_obs : bool
+        Whether the RINEX file contains observation data.
+        Needed for correct renaming of Hatanaka-compressed files.
+    compression : 'gz' (default), 'bz2', or 'none'
+        Compression (if any) applied in addition to the Hatanaka compression.
+
+    Returns
+    -------
+    Path
+        The path of the resulting RINEX file after compression.
+    """
     path = Path(path)
     parts = path.name.split('.')
     if len(parts) < 2:
