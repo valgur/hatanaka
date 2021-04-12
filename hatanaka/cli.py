@@ -15,7 +15,12 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
     if args is None:
         args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='Decompress compressed RINEX files')
+    parser = argparse.ArgumentParser(
+        description='Decompress compressed RINEX files.',
+        epilog='This program will decompress any RINEX files compressed with Hatanaka compression'
+               '(.crx|.##d) and/or with a conventional compression format (.gz|.Z|.zip|.bz2) to '
+               'their plain RINEX counterpart. Already decompressed files are ignored.'
+    )
     parser.add_argument('files', type=Path, nargs='*',
                         help='Compressed RINEX files. '
                              'stdin and stdout are used if no input files are provided.')
@@ -36,12 +41,18 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
     if args is None:
         args = sys.argv[1:]
 
-    parser = argparse.ArgumentParser(description='Compress RINEX files')
+    parser = argparse.ArgumentParser(
+        description='Compress RINEX files.',
+        epilog='This program applies Hatanaka and optionally a conventional '
+               'compression (gzip by default) to any provided RINEX files. '
+               'Already compressed files are ignored.'
+    )
     parser.add_argument('files', type=Path, nargs='*',
                         help='RINEX files. '
                              'stdin and stdout are used if no input files are provided.')
     parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'none'],
-                        help='which compression to apply in addition to Hatanaka compression')
+                        help='which compression to apply in addition to Hatanaka compression '
+                             '(default: gz)')
     parser.add_argument(
         '-s', '--skip-strange-epochs', action='store_true',
         help='warn and skip strange epochs instead of raising an exception')
