@@ -16,7 +16,9 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description='Decompress compressed RINEX files')
-    parser.add_argument('files', type=Path, nargs='*', help='compressed RINEX files')
+    parser.add_argument('files', type=Path, nargs='*',
+                        help='Compressed RINEX files. '
+                             'stdin and stdout are used if no input files are provided.')
     parser.add_argument(
         '-s', '--skip-strange-epochs', action='store_true',
         help='This option may be used for salvaging usable data when middle of the'
@@ -27,29 +29,7 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
              'happens in the lost part of the data.')
     _add_common_args(parser)
     args = parser.parse_args(args)
-
-    for in_file in args.files:
-        with _record_warnings() as warning_list:
-            out_file = decompress_on_disk(in_file, skip_strange_epochs=args.skip_strange_epochs)
-        if out_file == in_file:
-            print(f'{str(in_file)} is already decompressed')
-        else:
-            print(f'Created {str(out_file)}')
-        assert out_file.exists()
-        if args.delete:
-            if len(warning_list) == 0 and in_file != out_file:
-                in_file.unlink()
-                print(f'Deleted {str(in_file)}')
-
-    if len(args.files) == 0:
-        with _record_warnings() as warning_list:
-            decompressed = decompress(sys.stdin.buffer.read(),
-                                      skip_strange_epochs=args.skip_strange_epochs)
-            sys.stdout.buffer.write(decompressed)
-
-    if len(warning_list) > 0:
-        return 2
-    return 0
+    return _run(decompress, decompress_on_disk, args, skip_strange_epochs=args.skip_strange_epochs)
 
 
 def compress_cli(args: Optional[List[str]] = None) -> int:
@@ -57,7 +37,9 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
         args = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description='Compress RINEX files')
-    parser.add_argument('files', type=Path, nargs='*', help='RINEX files')
+    parser.add_argument('files', type=Path, nargs='*',
+                        help='RINEX files. '
+                             'stdin and stdout are used if no input files are provided.')
     parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'none'],
                         help='which compression to apply in addition to Hatanaka compression')
     parser.add_argument(
@@ -73,16 +55,24 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
              'increasing the file size.')
     _add_common_args(parser)
     args = parser.parse_args(args)
-
-    for in_file in args.files:
-        with _record_warnings() as warning_list:
-            out_file = compress_on_disk(
-                in_file,
+    return _run(compress, compress_on_disk, args,
                 compression=args.compression,
                 skip_strange_epochs=args.skip_strange_epochs,
                 reinit_every_nth=args.reinit_every_nth)
+
+
+def _run(func, func_on_disk, args, **kwargs):
+    missing_files = [x for x in args.files if not x.exists()]
+    if missing_files:
+        for f in missing_files:
+            print(f"Error: '{str(f)}' was not found", file=sys.stderr)
+            exit(1)
+
+    for in_file in args.files:
+        with _record_warnings() as warning_list:
+            out_file = func_on_disk(in_file, **kwargs)
         if out_file == in_file:
-            print(f'{str(in_file)} is already compressed')
+            print(f'{str(in_file)} is already {func.__name__}ed')
         else:
             print(f'Created {str(out_file)}')
         assert out_file.exists()
@@ -93,12 +83,8 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
 
     if len(args.files) == 0:
         with _record_warnings() as warning_list:
-            compressed = compress(
-                sys.stdin.buffer.read(),
-                compression=args.compression,
-                skip_strange_epochs=args.skip_strange_epochs,
-                reinit_every_nth=args.reinit_every_nth)
-            sys.stdout.buffer.write(compressed)
+            converted = func(sys.stdin.buffer.read(), **kwargs)
+            sys.stdout.buffer.write(converted)
 
     if len(warning_list) > 0:
         return 2
