@@ -19,7 +19,8 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
         description='Decompress compressed RINEX files.',
         epilog='This program will decompress any RINEX files compressed with Hatanaka compression'
                '(.crx|.##d) and/or with a conventional compression format (.gz|.Z|.zip|.bz2) to '
-               'their plain RINEX counterpart. Already decompressed files are ignored.'
+               'their plain RINEX counterpart. Already decompressed files are ignored. '
+               'Exit codes: 0 - success, 1 - error, 2 - warning.'
     )
     parser.add_argument('files', type=Path, nargs='*',
                         help='Compressed RINEX files. '
@@ -45,7 +46,8 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
         description='Compress RINEX files.',
         epilog='This program applies Hatanaka and optionally a conventional '
                'compression (gzip by default) to any provided RINEX files. '
-               'Already compressed files are ignored.'
+               'Already compressed files are ignored. '
+               'Exit codes: 0 - success, 1 - error, 2 - warning.'
     )
     parser.add_argument('files', type=Path, nargs='*',
                         help='RINEX files. '
