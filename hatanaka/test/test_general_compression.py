@@ -158,12 +158,8 @@ def test_invalid_input(crx_str, rnx_bytes):
         compress(io.BytesIO(rnx_bytes))
 
 
-@pytest.mark.parametrize(
-    'input_name',
-    ['sample', 'sample.crxx', 'sample.abo', 'sample.abd', 'sample.21dd']
-)
-def test_invalid_name(tmp_path, rnx_sample, input_name):
-    sample_path = tmp_path / input_name
+def test_invalid_name(tmp_path, rnx_sample):
+    sample_path = tmp_path / 'sample'
     shutil.copy(rnx_sample, sample_path)
     with pytest.raises(ValueError) as excinfo:
         decompress_on_disk(sample_path)

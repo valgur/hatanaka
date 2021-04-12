@@ -30,7 +30,6 @@ def decompress(content: Union[Path, str, bytes], *,
     Already decompressed files are returned as is.
 
     Compression type is deduced automatically from the file contents.
-    File extensions are not validated (as is done in decompress_on_disk()).
 
     Parameters
     ----------
@@ -73,8 +72,6 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
     Already decompressed files are ignored.
 
     Compression type is deduced automatically from the file contents.
-    Input file extensions are loosely validated to assign a correct extension
-    to the decompressed file.
 
     Parameters
     ----------
@@ -104,7 +101,7 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
     """
     path = Path(path)
     is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
-    out_path = get_decompressed_path(path, is_obs)
+    out_path = get_decompressed_path(path)
     if out_path == path:
         # file does not need decompressing
         return out_path
@@ -113,16 +110,13 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
     return out_path
 
 
-def get_decompressed_path(path: Union[Path, str], is_obs: bool) -> Path:
+def get_decompressed_path(path: Union[Path, str]) -> Path:
     """Get the decompressed path corresponding to a compressed RINEX file after decompression.
 
     Parameters
     ----------
     path : path or str
-        Path to the compression RINEX file.
-    is_obs : bool
-        Whether the RINEX file contains observation data.
-        Needed for correct renaming of Hatanaka-compressed files.
+        Path to the compressed RINEX file.
 
     Returns
     -------
@@ -136,18 +130,14 @@ def get_decompressed_path(path: Union[Path, str], is_obs: bool) -> Path:
     if parts[-1].lower() in ['z', 'gz', 'bz2', 'zip']:
         parts.pop()
     suffix = parts[-1]
-    if is_obs:
-        is_valid = re.match(r'^(?:crx|rnx|\d\d[od])$', suffix, flags=re.I)
-        if not is_valid:
-            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
-        if suffix[2] == 'd':
-            suffix = suffix[:2] + 'o'
-        elif suffix[2] == 'D':
-            suffix = suffix[:2] + 'O'
-        elif suffix == 'crx':
-            suffix = 'rnx'
-        elif suffix == 'CRX':
-            suffix = 'RNX'
+    if re.fullmatch(r'\d\dd', suffix):
+        suffix = suffix[:2] + 'o'
+    elif re.fullmatch(r'\d\dD', suffix):
+        suffix = suffix[:2] + 'O'
+    elif suffix == 'crx':
+        suffix = 'rnx'
+    elif suffix == 'CRX':
+        suffix = 'RNX'
     out_path = path.parent / '.'.join(parts[:-1] + [suffix])
     return out_path
 
@@ -241,16 +231,17 @@ def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
     return out_path
 
 
-def get_compressed_path(path, is_obs, compression='gz'):
+def get_compressed_path(path, is_obs=None, compression='gz'):
     """Get the compressed path corresponding to a RINEX file after compression.
 
     Parameters
     ----------
     path : path or str
-        Path to the compression RINEX file.
-    is_obs : bool
+        Path to the RINEX file being compressed.
+    is_obs : bool, optional
         Whether the RINEX file contains observation data.
-        Needed for correct renaming of Hatanaka-compressed files.
+        Needed for correct renaming of files with .rnx suffix,
+        which will be Hatanaka-compressed if they contain observation data.
     compression : 'gz' (default), 'bz2', or 'none'
         Compression (if any) applied in addition to the Hatanaka compression.
 
@@ -264,18 +255,19 @@ def get_compressed_path(path, is_obs, compression='gz'):
     if len(parts) < 2:
         raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
     suffix = parts[-1]
-    if is_obs:
-        is_valid = re.match(r'^(?:crx|rnx|\d\d[od])$', suffix, flags=re.I)
-        if not is_valid:
-            raise ValueError(f"'{str(path)}' is not a valid RINEX file name")
-        if suffix[2] == 'o':
-            suffix = suffix[:2] + 'd'
-        elif suffix[2] == 'O':
-            suffix = suffix[:2] + 'D'
-        elif suffix == 'rnx':
-            suffix = 'crx'
-        elif suffix == 'RNX':
-            suffix = 'CRX'
+    if re.fullmatch(r'\d\do', suffix):
+        suffix = suffix[:2] + 'd'
+    elif re.fullmatch(r'\d\dO', suffix):
+        suffix = suffix[:2] + 'D'
+    elif suffix.lower() == 'rnx':
+        if is_obs is None:
+            raise ValueError(f'whether {path.name} contains observation data is ambiguous, '
+                             'need to specify is_obs argument')
+        elif is_obs:
+            if suffix == 'RNX':
+                suffix = 'CRX'
+            else:
+                suffix = 'crx'
     out_parts = parts[:-1] + [suffix]
     if compression != 'none':
         out_parts.append(compression)
