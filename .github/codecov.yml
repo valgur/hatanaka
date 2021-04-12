@@ -1,0 +1,5 @@
+# Disable coverage status checks on commits
+coverage:
+  status:
+    project: off
+    patch: off
