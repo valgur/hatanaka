@@ -1,12 +1,11 @@
 import argparse
 import sys
-import warnings
-from contextlib import contextmanager
 from pathlib import Path
 from typing import List, Optional
 
 from hatanaka import __version__, compress, compress_on_disk, decompress, decompress_on_disk, \
     rnxcmp_version
+from hatanaka.general_compression import _record_warnings
 
 __all__ = ['decompress_cli', 'compress_cli']
 
@@ -83,16 +82,13 @@ def _run(func, func_on_disk, args, **kwargs):
 
     for in_file in args.files:
         with _record_warnings() as warning_list:
-            out_file = func_on_disk(in_file, **kwargs)
+            out_file = func_on_disk(in_file, delete=args.delete, **kwargs)
         if out_file == in_file:
             print(f'{str(in_file)} is already {func.__name__}ed')
         else:
             print(f'Created {str(out_file)}')
-        assert out_file.exists()
-        if args.delete:
-            if len(warning_list) == 0 and in_file != out_file:
-                in_file.unlink()
-                print(f'Deleted {str(in_file)}')
+        if args.delete and not in_file.exists():
+            print(f'Deleted {str(in_file)}')
 
     if len(args.files) == 0:
         with _record_warnings() as warning_list:
@@ -110,12 +106,3 @@ def _add_common_args(parser):
                              'finishes without any errors and warnings')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('--rnxcmp-version', action='version', version=rnxcmp_version)
-
-
-@contextmanager
-def _record_warnings():
-    with warnings.catch_warnings(record=True) as warning_list:
-        yield warning_list
-    for w in warning_list:
-        warnings.showwarning(message=w.message, category=w.category, filename=w.filename,
-                             lineno=w.lineno, file=w.file, line=w.line)

@@ -173,3 +173,41 @@ def test_invalid_name(tmp_path, rnx_sample):
         compress_on_disk(sample_path)
     msg = excinfo.value.args[0]
     assert msg.endswith('is not a valid RINEX file name')
+
+
+def test_decompress_on_disk_delete(tmp_path, rnx_bytes):
+    # prepare
+    in_file = 'sample.crx.gz'
+    sample_path = tmp_path / in_file
+    shutil.copy(get_data_path(in_file), sample_path)
+    # decompress and delete
+    out_path = decompress_on_disk(sample_path, delete=True)
+    # check
+    expected_path = tmp_path / 'sample.rnx'
+    assert not sample_path.exists()
+    assert out_path == expected_path
+    assert expected_path.exists()
+    assert clean(decompress(expected_path)) == clean(rnx_bytes)
+    # check that already decompressed is not deleted
+    out_path = decompress_on_disk(expected_path, delete=True)
+    assert out_path == expected_path
+    assert out_path.exists()
+
+
+def test_compress_on_disk_delete(tmp_path, rnx_bytes):
+    # prepare
+    in_file = 'sample.rnx'
+    sample_path = tmp_path / in_file
+    shutil.copy(get_data_path(in_file), sample_path)
+    # decompress and delete
+    out_path = compress_on_disk(sample_path, delete=True)
+    # check
+    expected_path = tmp_path / 'sample.crx.gz'
+    assert not sample_path.exists()
+    assert out_path == expected_path
+    assert expected_path.exists()
+    assert clean(decompress(expected_path)) == clean(rnx_bytes)
+    # check that already decompressed is not deleted
+    out_path = compress_on_disk(expected_path, delete=True)
+    assert out_path == expected_path
+    assert out_path.exists()

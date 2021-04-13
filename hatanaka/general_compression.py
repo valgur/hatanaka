@@ -1,7 +1,9 @@
 import bz2
 import gzip
 import re
+import warnings
 import zipfile
+from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from typing import Union
@@ -64,7 +66,8 @@ def decompress(content: Union[Path, str, bytes], *,
     return _decompress(content, skip_strange_epochs)[1]
 
 
-def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = False) -> Path:
+def decompress_on_disk(path: Union[Path, str], *, delete: bool = False,
+                       skip_strange_epochs: bool = False) -> Path:
     """Decompress compressed RINEX files and write the resulting file to disk.
 
     Any RINEX files compressed with Hatanaka compression (.crx|.##d) and/or with a conventional
@@ -77,6 +80,8 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
     ----------
     path : Path or str
         Path to a compressed RINEX file.
+    delete : bool, default False
+        Delete the source file after successful decompression if no errors or warnings were raised.
     skip_strange_epochs : bool, default False
         For Hatanaka decompression.
         Warn and skip strange epochs instead of raising an exception.
@@ -100,13 +105,18 @@ def decompress_on_disk(path: Union[Path, str], *, skip_strange_epochs: bool = Fa
         For invalid file contents.
     """
     path = Path(path)
-    is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
+    with _record_warnings() as warning_list:
+        is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
     out_path = get_decompressed_path(path)
     if out_path == path:
         # file does not need decompressing
         return out_path
     with out_path.open('wb') as f_out:
         f_out.write(txt)
+    assert out_path.exists()
+    if delete:
+        if len(warning_list) == 0 and out_path != path:
+            path.unlink()
     return out_path
 
 
@@ -186,7 +196,7 @@ def compress(content: Union[Path, str, bytes], *, compression: str = 'gz',
     return _compress(content, compression, skip_strange_epochs, reinit_every_nth)[1]
 
 
-def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
+def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz', delete: bool = False,
                      skip_strange_epochs: bool = False,
                      reinit_every_nth: int = None) -> Path:
     """Compress RINEX files.
@@ -200,6 +210,8 @@ def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
         Path to a RINEX file.
     compression : 'gz' (default), 'bz2', or 'none'
         Which compression (if any) to apply in addition to the Hatanaka compression.
+    delete : bool, default False
+        Delete the source file after successful compression if no errors or warnings were raised.
     skip_strange_epochs : bool, default False
         For Hatanaka compression. Warn and skip strange epochs instead of raising an exception.
     reinit_every_nth : int, optional
@@ -225,11 +237,18 @@ def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz',
     if path.name.lower().endswith(('.gz', '.bz2', '.z', '.zip')):
         # already compressed
         return path
-    is_obs, txt = _compress(path.read_bytes(), compression=compression,
-                            skip_strange_epochs=skip_strange_epochs,
-                            reinit_every_nth=reinit_every_nth)
+    with _record_warnings() as warning_list:
+        is_obs, txt = _compress(path.read_bytes(), compression=compression,
+                                skip_strange_epochs=skip_strange_epochs,
+                                reinit_every_nth=reinit_every_nth)
     out_path = get_compressed_path(path, is_obs, compression)
+    if out_path == path:
+        return out_path
     out_path.write_bytes(txt)
+    assert out_path.exists()
+    if delete:
+        if len(warning_list) == 0:
+            path.unlink()
     return out_path
 
 
@@ -353,3 +372,12 @@ def _compress_hatanaka(txt: bytes, skip_strange_epochs, reinit_every_nth) -> (bo
     else:
         is_obs = b'COMPACT RINEX' in txt[:80]
         return is_obs, txt
+
+
+@contextmanager
+def _record_warnings():
+    with warnings.catch_warnings(record=True) as warning_list:
+        yield warning_list
+    for w in warning_list:
+        warnings.showwarning(message=w.message, category=w.category, filename=w.filename,
+                             lineno=w.lineno, file=w.file, line=w.line)
