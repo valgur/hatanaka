@@ -27,6 +27,9 @@ decompress_pairs = [
     ('.rnx.bz2', '.rnx'),
     ('.21o', '.21o'),
     ('.21o.gz', '.21o'),
+    ('.zip', '.rnx'),
+    ('.gz', '.rnx'),
+    ('.bz2', '.rnx'),
 ]
 
 
@@ -60,6 +63,7 @@ def test_decompress_on_disk(tmp_path, crx_sample, rnx_bytes, input_suffix, expec
     out_path = decompress_on_disk(sample_path)
     # check
     assert out_path.exists()
+    print(list(tmp_path.glob('*')))
     assert out_path == tmp_path / ('sample' + expected_suffix)
     assert clean(out_path.read_bytes()) == clean(rnx_bytes)
 

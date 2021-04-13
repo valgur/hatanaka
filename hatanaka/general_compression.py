@@ -130,7 +130,9 @@ def get_decompressed_path(path: Union[Path, str]) -> Path:
     if parts[-1].lower() in ['z', 'gz', 'bz2', 'zip']:
         parts.pop()
     suffix = parts[-1]
-    if re.fullmatch(r'\d\dd', suffix):
+    if len(parts) == 1:
+        return path.parent / (parts[0] + '.rnx')
+    elif re.fullmatch(r'\d\dd', suffix):
         suffix = suffix[:2] + 'o'
     elif re.fullmatch(r'\d\dD', suffix):
         suffix = suffix[:2] + 'O'
