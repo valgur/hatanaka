@@ -6,7 +6,7 @@ from subprocess import PIPE
 from typing import AnyStr, IO, Union
 from warnings import warn
 
-from importlib_resources import path
+import importlib_resources
 
 import hatanaka.bin
 
@@ -140,8 +140,11 @@ def _check(program, retcode, stderr):
         warn(f'{program}: {stderr}')
 
 
+executables = importlib_resources.files(hatanaka.bin)
+
+
 def _popen(program, args, **kwargs):
     if platform.system() == 'Windows':
         program += '.exe'
-    with path(hatanaka.bin, program) as executable:
+    with executables.joinpath(program) as executable:
         return subprocess.Popen([str(executable)] + args, **kwargs)
