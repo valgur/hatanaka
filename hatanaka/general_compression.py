@@ -8,14 +8,9 @@ from io import BytesIO
 from pathlib import Path
 from typing import Union
 
-from .hatanaka import crx2rnx, rnx2crx
+import ncompress as lzw
 
-try:
-    # unlzw is implemented in C and more efficient that Python-based unlzw3.
-    # Much more difficult to install, though.
-    from unlzw import unlzw
-except ImportError:
-    from unlzw3 import unlzw
+from .hatanaka import crx2rnx, rnx2crx
 
 __all__ = [
     'decompress', 'decompress_on_disk', 'get_decompressed_path',
@@ -166,7 +161,7 @@ def compress(content: Union[Path, str, bytes], *, compression: str = 'gz',
     ----------
     content : Path or str or bytes
         Path to a RINEX file or file contents as a bytes object.
-    compression : 'gz' (default), 'bz2', or 'none'
+    compression : 'gz' (default), 'bz2', 'Z' or 'none'
         Which compression (if any) to apply in addition to the Hatanaka compression.
     skip_strange_epochs : bool, default False
         For Hatanaka compression. Warn and skip strange epochs instead of raising an exception.
@@ -208,7 +203,7 @@ def compress_on_disk(path: Union[Path, str], *, compression: str = 'gz', delete:
     ----------
     path : Path or str
         Path to a RINEX file.
-    compression : 'gz' (default), 'bz2', or 'none'
+    compression : 'gz' (default), 'bz2', 'Z', or 'none'
         Which compression (if any) to apply in addition to the Hatanaka compression.
     delete : bool, default False
         Delete the source file after successful compression if no errors or warnings were raised.
@@ -263,7 +258,7 @@ def get_compressed_path(path, is_obs=None, compression='gz'):
         Whether the RINEX file contains observation data.
         Needed for correct renaming of files with .rnx suffix,
         which will be Hatanaka-compressed if they contain observation data.
-    compression : 'gz' (default), 'bz2', or 'none'
+    compression : 'gz' (default), 'bz2', 'Z', or 'none'
         Compression (if any) applied in addition to the Hatanaka compression.
 
     Returns
@@ -331,7 +326,7 @@ def _decompress(txt: bytes, skip_strange_epochs: bool) -> (bool, bytes):
             with z.open(flist[0], 'r') as f:
                 return _decompress_hatanaka(f.read(), skip_strange_epochs)
     elif _is_lzw(magic_bytes):
-        return _decompress_hatanaka(unlzw(txt), skip_strange_epochs)
+        return _decompress_hatanaka(lzw.decompress(txt), skip_strange_epochs)
     else:
         return _decompress_hatanaka(txt, skip_strange_epochs)
 
@@ -353,6 +348,8 @@ def _compress(txt: bytes, compression, skip_strange_epochs, reinit_every_nth) ->
         return is_obs, gzip.compress(txt)
     elif compression == 'bz2':
         return is_obs, bz2.compress(txt)
+    elif compression == 'Z':
+        return is_obs, lzw.compress(txt)
     elif compression == 'zip':
         raise NotImplementedError('zip compression is not supported')
     elif compression == 'none':

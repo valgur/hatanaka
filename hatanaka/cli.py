@@ -51,7 +51,7 @@ def compress_cli(args: Optional[List[str]] = None) -> int:
     parser.add_argument('files', type=Path, nargs='*',
                         help='RINEX files. '
                              'stdin and stdout are used if no input files are provided.')
-    parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'none'],
+    parser.add_argument('-c', '--compression', default='gz', choices=['gz', 'bz2', 'Z', 'none'],
                         help='which compression to apply in addition to Hatanaka compression '
                              '(default: gz)')
     parser.add_argument(

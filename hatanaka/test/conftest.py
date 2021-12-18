@@ -13,7 +13,7 @@ def get_data_path(fname):
     for x in ['.21d', '.crx']:
         fname = fname.replace(x.lower(), '.crx')
         fname = fname.replace(x.upper(), '.crx')
-    m = re.fullmatch(r'sample\.(zip|gz|bz2)', fname)
+    m = re.fullmatch(r'sample\.(zip|gz|bz2|Z)', fname)
     if m:
         fname = 'sample.crx.' + m.group(1)
     return files(hatanaka.test.data) / fname
