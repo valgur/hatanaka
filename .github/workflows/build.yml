@@ -21,9 +21,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-        python-version: [ '3.6', '3.9' ]
-        install-mode: [ 'setup.py', 'sdist', 'wheel' ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.6', '3.9']
+        install-mode: ['setup.py', 'sdist', 'wheel']
     steps:
       - uses: actions/checkout@v2
 
@@ -32,15 +32,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: setup.py install
+      - name: build and install
         if: ${{ matrix.install-mode == 'setup.py' }}
-        run: python setup.py install
+        run: |
+          python setup.py build
+          pip install .
+
       - name: sdist install
         if: ${{ matrix.install-mode == 'sdist' }}
         run: |
           python setup.py sdist
           ls dist/
           python .github/pip.py install dist/hatanaka-*.tar.gz
+
       - name: wheel install
         if: ${{ matrix.install-mode == 'wheel' }}
         env:
