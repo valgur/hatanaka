@@ -2,6 +2,17 @@
 
 See also [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
+## [2.4.0] - 2021-12-19
+
+- Added support for LZW (.Z) compression output. This is provided by the
+  new [`ncompress`](https://github.com/valgur/ncompress) library.
+
+  As a result, LZW decompression is now also 40x faster than with `unlzw3` and as fast as with the optional `unlzw`
+  dependency
+  (which currently has a [memory leak issue](https://github.com/ionelmc/python-unlzw/pull/3)).
+
+- Fixed a deprecation warning from `importlib_resources`.
+
 ## [2.3.0] - 2021-04-13
 
 - Add the `--delete` option of the CLI apps also as an option in the library.
@@ -32,6 +43,7 @@ First release.
 - Provide Hatanaka decompression / compression support via `crx2rnx` and `rnx2crx` functions.
 - Install `crx2rnx` and `rnx2crx` as command line executables.
 
+[2.4.0]: https://github.com/valgur/hatanaka/compare/v2.3.0...v2.4.0
 
 [2.3.0]: https://github.com/valgur/hatanaka/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/valgur/hatanaka/compare/v2.1.0...v2.2.0
