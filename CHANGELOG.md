@@ -2,6 +2,10 @@
 
 See also [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
+## [2.5.0] - 2022-01-10
+
+- Decompression now raises a `ValueError` if the decompressed file lacks a valid RINEX header record.
+
 ## [2.4.0] - 2021-12-19
 
 - Added support for LZW (.Z) compression output. This is provided by the
