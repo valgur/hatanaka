@@ -334,10 +334,12 @@ def _decompress(txt: bytes, skip_strange_epochs: bool) -> (bool, bytes):
 def _decompress_hatanaka(txt: bytes, skip_strange_epochs) -> (bool, bytes):
     if len(txt) < 80:
         raise ValueError('file is too short to be a valid RINEX file')
-
-    is_crinex = b'COMPACT RINEX' in txt[:80]
+    header = txt[:80]
+    is_crinex = b'COMPACT RINEX' in header
     if is_crinex:
         txt = crx2rnx(txt, skip_strange_epochs=skip_strange_epochs)
+    elif not header.endswith(b'RINEX VERSION / TYPE'):
+        raise ValueError('not a valid RINEX file')
     is_obs = b'OBSERVATION DATA' in txt[:80]
     return is_obs, txt
 
