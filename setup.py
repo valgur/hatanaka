@@ -33,7 +33,9 @@ class build_clib(_build_clib):
             build(build_info['sources'], output, cc, build_static, include_dirs, library_dirs)
 
         # copy to source dir as well for easier testing
-        for f in list(output_dir.glob('rnx2crx*')) + list(output_dir.glob('crx2rnx*')):
+        executables = list(output_dir.glob('rnx2crx*')) + list(output_dir.glob('crx2rnx*'))
+        assert len(executables) == 2
+        for f in executables:
             shutil.copy(f, 'hatanaka/bin/')
 
 
