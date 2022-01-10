@@ -6,8 +6,7 @@ from contextlib import contextmanager
 import pytest
 
 from hatanaka.cli import compress_cli, decompress, decompress_cli
-from .conftest import clean, get_data_path
-from .test_general_compression import compress_pairs, decompress_pairs
+from .conftest import clean, compress_pairs, decompress_pairs, get_data_path
 
 
 @contextmanager

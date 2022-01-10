@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 import pytest
 from importlib_resources import files
@@ -6,7 +7,7 @@ from importlib_resources import files
 import hatanaka.test.data
 
 
-def get_data_path(fname):
+def get_data_path(fname) -> Path:
     for x in ['.21o', '.rnx']:
         fname = fname.replace(x.lower(), '.rnx')
         fname = fname.replace(x.upper(), '.rnx')
@@ -79,3 +80,44 @@ def crx_bytes_stream(crx_sample):
 def rnx_bytes_stream(rnx_sample):
     with rnx_sample.open('rb') as f:
         yield f
+
+
+decompress_pairs = [
+    ('.crx', '.rnx'),
+    ('.CRX', '.RNX'),
+    ('.21d', '.21o'),
+    ('.21D', '.21O'),
+    ('.21d.gz', '.21o'),
+    ('.21d.Z', '.21o'),
+    ('.21d.bz2', '.21o'),
+    ('.21d.zip', '.21o'),
+    ('.crx.gz', '.rnx'),
+    ('.crx.Z', '.rnx'),
+    ('.crx.bz2', '.rnx'),
+    ('.crx.zip', '.rnx'),
+    ('.rnx', '.rnx'),
+    ('.rnx.gz', '.rnx'),
+    ('.rnx.Z', '.rnx'),
+    ('.rnx.zip', '.rnx'),
+    ('.rnx.bz2', '.rnx'),
+    ('.21o', '.21o'),
+    ('.21o.gz', '.21o'),
+    ('.zip', '.rnx'),
+    ('.gz', '.rnx'),
+    ('.bz2', '.rnx'),
+]
+
+compress_pairs = [
+    ('.rnx', 'none', '.crx'),
+    ('.rnx', 'gz', '.crx.gz'),
+    ('.rnx', 'bz2', '.crx.bz2'),
+    ('.rnx', 'Z', '.crx.Z'),
+    ('.RNX', 'gz', '.CRX.gz'),
+    ('.21o', 'bz2', '.21d.bz2'),
+    ('.21o', 'Z', '.21d.Z'),
+    ('.21O', 'gz', '.21D.gz'),
+    ('.crx', 'gz', '.crx.gz'),
+    ('.21d', 'gz', '.21d.gz'),
+    ('.crx', 'none', '.crx'),
+    ('.21d', 'none', '.21d'),
+]
