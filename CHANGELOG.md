@@ -2,6 +2,11 @@
 
 See also [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
+## [2.6.0] - 2022-01-21
+
+- Added `strict` parameter to decompression methods, which defaults to False.
+  `ValueError` for non-RINEX files is only raised when `strict=True`. 
+
 ## [2.5.0] - 2022-01-10
 
 - Decompression now raises a `ValueError` if the decompressed file lacks a valid RINEX header record.
@@ -47,8 +52,9 @@ First release.
 - Provide Hatanaka decompression / compression support via `crx2rnx` and `rnx2crx` functions.
 - Install `crx2rnx` and `rnx2crx` as command line executables.
 
+[2.6.0]: https://github.com/valgur/hatanaka/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/valgur/hatanaka/compare/v2.4.0...v2.5.0
 [2.4.0]: https://github.com/valgur/hatanaka/compare/v2.3.0...v2.4.0
-
 [2.3.0]: https://github.com/valgur/hatanaka/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/valgur/hatanaka/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/valgur/hatanaka/compare/v2.0.0...v2.1.0

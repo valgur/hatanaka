@@ -19,7 +19,7 @@ __all__ = [
 
 
 def decompress(content: Union[Path, str, bytes], *,
-               skip_strange_epochs: bool = False) -> bytes:
+               skip_strange_epochs: bool = False, strict: bool = False) -> bytes:
     """Decompress compressed RINEX files.
 
     Any RINEX files compressed with Hatanaka compression (.crx|.##d) and/or with a conventional
@@ -41,6 +41,8 @@ def decompress(content: Union[Path, str, bytes], *,
         Using this together with of reinit_every_nth option of rnx2crx may be effective.
         Caution: It is assumed that no change in the list of data types happens in the
         lost part of the data.
+    strict : bool, default False
+        If True, a ValueError is raised if the decoded file is not RINEX.
 
     Returns
     -------
@@ -55,14 +57,14 @@ def decompress(content: Union[Path, str, bytes], *,
         For invalid file contents.
     """
     if isinstance(content, (Path, str)):
-        content = _decompress(Path(content).read_bytes(), skip_strange_epochs)[1]
+        content = _decompress(Path(content).read_bytes(), skip_strange_epochs, strict)[1]
     elif not isinstance(content, bytes):
         raise ValueError('input must be either a path or a binary string')
-    return _decompress(content, skip_strange_epochs)[1]
+    return _decompress(content, skip_strange_epochs, strict)[1]
 
 
 def decompress_on_disk(path: Union[Path, str], *, delete: bool = False,
-                       skip_strange_epochs: bool = False) -> Path:
+                       skip_strange_epochs: bool = False, strict: bool = False) -> Path:
     """Decompress compressed RINEX files and write the resulting file to disk.
 
     Any RINEX files compressed with Hatanaka compression (.crx|.##d) and/or with a conventional
@@ -86,6 +88,8 @@ def decompress_on_disk(path: Union[Path, str], *, delete: bool = False,
         Using this together with of reinit_every_nth option of rnx2crx may be effective.
         Caution: It is assumed that no change in the list of data types happens in the
         lost part of the data.
+    strict : bool, default False
+        If True, a ValueError is raised if the decoded file is not RINEX.
 
     Returns
     -------
@@ -101,7 +105,7 @@ def decompress_on_disk(path: Union[Path, str], *, delete: bool = False,
     """
     path = Path(path)
     with _record_warnings() as warning_list:
-        is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs=skip_strange_epochs)
+        is_obs, txt = _decompress(path.read_bytes(), skip_strange_epochs, strict)
     out_path = get_decompressed_path(path)
     if out_path == path:
         # file does not need decompressing
@@ -307,15 +311,15 @@ def _is_bz2(magic_bytes: bytes) -> bool:
     return magic_bytes == b'\x42\x5A'
 
 
-def _decompress(txt: bytes, skip_strange_epochs: bool) -> (bool, bytes):
+def _decompress(txt: bytes, skip_strange_epochs: bool, strict: bool) -> (bool, bytes):
     if len(txt) < 2:
         raise ValueError('empty file')
     magic_bytes = txt[:2]
 
     if _is_gz(magic_bytes):
-        return _decompress_hatanaka(gzip.decompress(txt), skip_strange_epochs)
+        return _decompress_hatanaka(gzip.decompress(txt), skip_strange_epochs, strict)
     if _is_bz2(magic_bytes):
-        return _decompress_hatanaka(bz2.decompress(txt), skip_strange_epochs)
+        return _decompress_hatanaka(bz2.decompress(txt), skip_strange_epochs, strict)
     elif _is_zip(magic_bytes):
         with zipfile.ZipFile(BytesIO(txt), 'r') as z:
             flist = z.namelist()
@@ -324,21 +328,21 @@ def _decompress(txt: bytes, skip_strange_epochs: bool) -> (bool, bytes):
             elif len(flist) > 1:
                 raise ValueError('more than one file in zip archive')
             with z.open(flist[0], 'r') as f:
-                return _decompress_hatanaka(f.read(), skip_strange_epochs)
+                return _decompress_hatanaka(f.read(), skip_strange_epochs, strict)
     elif _is_lzw(magic_bytes):
-        return _decompress_hatanaka(lzw.decompress(txt), skip_strange_epochs)
+        return _decompress_hatanaka(lzw.decompress(txt), skip_strange_epochs, strict)
     else:
-        return _decompress_hatanaka(txt, skip_strange_epochs)
+        return _decompress_hatanaka(txt, skip_strange_epochs, strict)
 
 
-def _decompress_hatanaka(txt: bytes, skip_strange_epochs) -> (bool, bytes):
+def _decompress_hatanaka(txt: bytes, skip_strange_epochs, strict) -> (bool, bytes):
     if len(txt) < 80:
         raise ValueError('file is too short to be a valid RINEX file')
     header = txt[:80]
     is_crinex = b'COMPACT RINEX' in header
     if is_crinex:
         txt = crx2rnx(txt, skip_strange_epochs=skip_strange_epochs)
-    elif not header.endswith(b'RINEX VERSION / TYPE'):
+    elif strict and not header.endswith(b'RINEX VERSION / TYPE'):
         raise ValueError('not a valid RINEX file')
     is_obs = b'OBSERVATION DATA' in txt[:80]
     return is_obs, txt

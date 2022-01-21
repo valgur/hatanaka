@@ -112,7 +112,7 @@ def test_on_disk_invalid_input(tmp_path):
     path = tmp_path / 'sample.crx'
     path.write_bytes(b'blah' * 100)
     with pytest.raises(ValueError) as excinfo:
-        decompress_on_disk(path)
+        decompress_on_disk(path, strict=True)
     msg = excinfo.value.args[0]
     assert 'not a valid RINEX file' in msg
     assert not get_compressed_path(path).exists()
