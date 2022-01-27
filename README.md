@@ -70,6 +70,8 @@ rinex-compress 1lsu0010.21o
 rinex-decompress < 1lsu0010.21d.Z | grep 'SYS / # / OBS TYPES'
 ```
 
+Additionally, the original `rnx2crx` and `crx2rnx` executables are also installed for other tools that might want to make use of them, such as RTKLIB.
+
 ## Development
 
 ### Building from source

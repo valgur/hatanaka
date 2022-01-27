@@ -1,16 +1,18 @@
 import argparse
+import os
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 
 from hatanaka import __version__, compress, compress_on_disk, decompress, decompress_on_disk, \
     rnxcmp_version
 from hatanaka.general_compression import _record_warnings
+from hatanaka.hatanaka import _popen
 
 __all__ = ['decompress_cli', 'compress_cli']
 
 
-def decompress_cli(args: Optional[List[str]] = None) -> int:
+def decompress_cli(args: List[str] = None) -> int:
     if args is None:
         args = sys.argv[1:]
 
@@ -37,7 +39,7 @@ def decompress_cli(args: Optional[List[str]] = None) -> int:
     return _run(decompress, decompress_on_disk, args, skip_strange_epochs=args.skip_strange_epochs)
 
 
-def compress_cli(args: Optional[List[str]] = None) -> int:
+def compress_cli(args: List[str] = None) -> int:
     if args is None:
         args = sys.argv[1:]
 
@@ -106,3 +108,23 @@ def _add_common_args(parser):
                              'finishes without any errors and warnings')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('--rnxcmp-version', action='version', version=rnxcmp_version)
+
+
+def _wrap(program, args):
+    try:
+        if args is None:
+            args = sys.argv[1:]
+        proc = _popen(program, args)
+        proc.wait()
+        return proc.returncode
+    except KeyboardInterrupt:
+        sys.stderr = open(os.devnull, 'w')
+        raise
+
+
+def rnx2crx(args: List[str] = None):
+    return _wrap('rnx2crx', args)
+
+
+def crx2rnx(args: List[str] = None):
+    return _wrap('crx2rnx', args)

@@ -2,6 +2,10 @@
 
 See also [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
+## [2.8.0] - 2022-01-27
+
+- `rnx2crx` and `crx2rnx` executables are now added to the PATH.
+
 ## [2.7.0] - 2022-01-27
 
 - Updated RNXCMP to version 4.1.0:
@@ -63,6 +67,7 @@ First release.
 - Provide Hatanaka decompression / compression support via `crx2rnx` and `rnx2crx` functions.
 - Install `crx2rnx` and `rnx2crx` as command line executables.
 
+[2.8.0]: https://github.com/valgur/hatanaka/compare/v2.7.0...v2.8.0
 [2.7.0]: https://github.com/valgur/hatanaka/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/valgur/hatanaka/compare/v2.5.0...v2.6.0
 [2.5.0]: https://github.com/valgur/hatanaka/compare/v2.4.0...v2.5.0
