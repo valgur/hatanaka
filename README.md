@@ -2,7 +2,7 @@
 
 Effortless compression / decompression of RINEX files in Python and on the command line.
 
-Supports all compression formats allowed by the RINEX 2 and 3 standards:
+Supports all compression formats allowed by the RINEX 2, 3 and 4 standards:
 
 * Hatanaka compression for Observation Data Files,
 * LZW (.Z), gzip (.gz), bzip2 (.bz2) and .zip.
