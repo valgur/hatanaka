@@ -1,20 +1,20 @@
 **********************************************************************
-*                    RNX2CRX/CRX2RNX  (Ver.4.0.8)                    *
-*   RINEX file compression programs for RINEX version 2/3 files.     *
+*                    RNX2CRX/CRX2RNX  (Ver.4.1.0)                    *
+*   RINEX file compression programs for RINEX version 2/3/4 files.   *
 *                                                                    *
 *           Geospatial Information Authority of Japan                *
 *          Kitasato-1, Tsukuba, Ibaraki, 305-0811 Japan              *
 **********************************************************************
 ==== Contents of the directory ====
-RNXCMP_4.0.8_src.tar.gz   tar (gzip) package of source codes, front-end-tools 
+RNXCMP_4.1.0_src.tar.gz   tar (gzip) package of source codes, front-end-tools 
                      and documents. (for users who need to build binaries
                      for their own platform)
-RNXCMP_4.0.8_[OS type].tar.gz  tar (gzip) package of binaries and 
+RNXCMP_4.1.0_[OS type].tar.gz  tar (gzip) package of binaries and 
                                front-end-tools (C-shell scripts) for
                                several UNIX platforms with documents.
-RNXCMP_4.0.8_Windows.tar  tar package of binaries and front-end-tools 
+RNXCMP_4.1.0_Windows.tar  tar package of binaries and front-end-tools 
                           (batch scripts) for Windows OS with documents.
-RNXCMP_4.0.8_Windows.zip  the same as the above but in zip format.
+RNXCMP_4.1.0_Windows.zip  the same as the above but in zip format.
 LICENSE.txt    License terms. (also included in each of the above packages)
 CHANGES.txt    Change history of the software (also included in each of the
                above packages)

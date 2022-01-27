@@ -1,5 +1,33 @@
 Change history of the RNXCMP software
 
+ 2022-01-06
+   - Version # of crx2rnx.c, which was not updated. is corrected.
+     all binaries are replaced with re-compiled ones.
+
+ 2021-12-24
+   - Version 4.1.0 released.
+   - RINEX ver.4.xx files are accepted as inputs. The correspondence between
+     versions of RINEX format and those of Compact RINEX format is as follows:
+            RINEX          Compact RINEX
+          ver. 2.xx  <--->    ver.1.0
+          ver. 3.xx  <--->    ver.3.0
+          ver. 4.xx  <--->    ver.3.0
+   - The front-end tools RNX2CRZ.bat and CRZ2RNX.bat for Windows are replaced
+     with completely new ones. Long filenames or old short filenames of RINEX
+     conventions are assumed for input RINEX and Compacct RINEX files and
+     output RINEX files, accordingly. For old short file names of compressed
+     files, NOT VMS/DOS types, but only UNIX types can be handled.
+     The old DOS tools, that can handle short file names of compressed files
+     of VMS/DOS types, are obsolete and not provided any more.
+   - The default command is now "gzip" instead of "compress" for the text
+     compression in the front-end tools.
+   - Following bugs of RNX2CRX are fixed:
+       + Error in case the number of special records exceeds 99 
+         in RINEX ver.2 files.
+       + Error in case clock offset is padded with spaces in RINEX ver. 3 or 4 files. 
+       + Error in case a bad GNSS type is detected even if option -s 
+         is specified with RNX2CRX.
+
  2019-07-16
    - Version 4.0.8 released.
    - Correction of a bug in rnx2crx.c which eliminates clock 

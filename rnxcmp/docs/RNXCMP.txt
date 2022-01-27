@@ -1,17 +1,18 @@
     **********************************************************************
     *                       RNX2CRX/CRX2RNX                              *
     *               RINEX file compression programs.                     *
-    *                 for RINEX version 2/3 files                        *
-    *                         (Ver.4.0.8)                                *
+    *                 for RINEX version 2/3/4 files                        *
+    *                         (Ver.4.1.0)                                *
     *                                                                    *
     *                        Yuki Hatanaka,                              *
     *           Geospatial Information Authority of Japan                *
     *          Kitasato-1, Tsukuba, Ibaraki, 305-0811 Japan              *
     *                   e-mail: hata@gsi.go.jp                           *
     *                                                                    *
-    *                         2007/06/08                                 *
-    *         (comment on file naming convention: 2009/06/31)            *
-    * (Update URLs and description of file name conventions: 2019/07/12) *
+    *                         2007-06-08                                 *
+    * (2009-06-31: comment on file naming convention)                    *
+    * (2019-07-12: Update URLs and description of file name conventions) *
+    * (2021-12-22: Handling of RINEX ver. 4 is added)                    *
     *                                                                    *
     **********************************************************************
 
@@ -25,14 +26,18 @@ From the version 4.0.0, these programs are able to handle not only the
 RINEX format version 2.xx (and the corresponding Compact RINEX format 
 version 1.0), but also the RINEX format version 3.xx (and the corresponding 
 Compact RINEX format version 3.0):
+From the version 4.1.0, The programs are able to handle RINEX format version 4.xx, too.
 
 [compression]
 RINEX format version 2.xx --> (RNX2CRX) --> Compact RINEX format version 1.0
 RINEX format version 3.xx --> (RNX2CRX) --> Compact RINEX format version 3.0
+RINEX format version 4.xx --> (RNX2CRX) --> Compact RINEX format version 3.0
 
 [restoration]
 Compact RINEX format version 1.0 --> (CRX2RNX) --> RINEX format version 2.xx
-Compact RINEX format version 3.0 --> (CRX2RNX) --> RINEX format version 3.xx
+Compact RINEX format version 3.0 --> (CRX2RNX) --> RINEX format version 3.xx 
+                                                   or 4.xx according to the 
+                                                   version of the original RINEX
 
 Since Compact RINEX is ASCII text format, the high compression rate is achieved 
 by combining the Compact RINEX file generation with an additional standard
@@ -61,21 +66,21 @@ The following is an instruction to install the programs.
    directories are listed, type "echo $PATH" for unix or 
    "echo %PATH%" for DOS. Or, you would add new path to those list.
 3. (for UNIX) Set permission of the files to be executed.
+   If you need to output .Z file, UNIX 'compress' command have to be 
+   installed.
 4. (for DOS) To use DOS frontend tools, put following tools into the 
    directory which is included in the command serch paths.
-         1) compress.exe, compr.bat, decompr.bat
-            These programs are avairable from, e.g.
-               ftp://ftp.aiub.unibe.ch/pcrinex/compress.zip
-            compress.exe in the above works on 16- or 32-bit system.
+   To input .gz or .Z files or to output .gz files, 'gzip.exe' must be 
+   installed and command serch path is appropriately set.
+   To output .Z files, "compress.exe" (UNIX compress command) is needed.
+   too.
+
+         1) compress.exe
             The compress.exe for 64-bit Windows system is available from
                http://www.willus.com/archive/utils.shtml
                      -->   "Unix-style command archive"
             or
                https://sourceforge.net/projects/unxutils/
-         2) SPLNAME.EXE (provided with the package, or, if needed, you may
-            compile the source code splname.c which is also avairable in
-            the source package.
-
 
 ==== How to compile the programs? ====
 
@@ -91,6 +96,10 @@ The following is an instruction to install the programs.
           # gcc with the "-ansi" option. This problem was caused by 
           # non-standard behaviour of function "sprintf" that was provided in
           # the library of OS. Support for this irregularity was terminated,
+
+        [using GNU C on MacOSX10.14]
+             gcc -ansi -O2 rnx2crx.c -o RNX2CRX
+             gcc -ansi -O2 crx2rnx.c -o CRX2RNX
 
         [using SUN C compiler on Sun OS 5.9]
              cc -xO2 -Bstatic rnx2crx.c -o RNX2CRX
@@ -109,18 +118,26 @@ The following is an instruction to install the programs.
 
   The basic usage of the program RNX2CRX is as follows.
 
-         RNX2CRX [file] [-] [-f] [-e # of epochs] [-s] [-h]
+         RNX2CRX [file] [-] [-f] [-e # of epochs] [-s] [-d] [-h]
           stdin and stdout are used if input file name is not given.
           -       : output to stdout
           -f      : force overwrite of output file
           -e #    : initialize the compression operation at every # epochs
+                    When some part of the Compact RINEX file is lost, the data
+                    can not be recovered thereafter until all the data arc are
+                    initialized for differential operation. This option may be used to
+                    increase chances to recover parts of data by using an option of
+                    CRX2RNX(ver. 4.0 or after) with cost of increase of file size.
           -s      : warn and skip strange epochs (default: stop with error status)
+          -d      : delete the input file if conversion finishes without errors
+                    (i.e. exit code = 0 or 2).
+                    This option does nothing if stdin is used for the input.
           -h      : display help message
 
-  The default file name of the CompactRINEX file is "*.??d".
-  If the input RINEX file name follows the file name convention of RINEX
-  format (*.??o) and option '-' is not specified, then the default file 
-  name is chosen for the output file.
+  The default file name of the CompactRINEX file is "*.??d" and "*.crx".
+  If the input RINEX filename follows the filename convention of RINEX
+  format (*.??o or *O.rnx) and option '-' is not specified, then the default
+  filename is chosen for the output.
   The followings are the example of usage of RNX2CRX for UNIX environment:
     - If a standard naming convention is adoped;
             RNX2CRX rinex.07o
@@ -175,11 +192,12 @@ The following is an instruction to install the programs.
   If RNX2CRX and CRX2RNX detect a truncation of the file or other strange
   things, the programs stop with an error message.
 
-  The line feed code of the input files can be one of "LF", "CR+LF", or even
-  mixture of them. "CR" (that is often the case of Mac OS) is not supported
-  at current. Please convert "CR" into "LF" or "CR+LF" before the processing.
-  The line feed code of the output file depends on the OS (LF for UNIX,
-  CR+LF for DOS/Windows).
+  The line feed code of the input files can be "LF" or "CR+LF" and may even
+  change in the middle of the file. "CR" (that was the case of old MacOS 
+  until ver.9) is not supported at current. Please convert "CR" into "LF" 
+  or "CR+LF" before the processing.
+  The line feed code of the output file depends on the OS on which the
+  program is run (LF on UNIX, CR+LF on DOS/Windows).
 
   Some old RINEX (version 2.xx) files assign the format (12(A1,I2)) for 
   continuation lines of satellite list instead of (32X,12(A1,I2)). RNX2CRX 
@@ -202,91 +220,82 @@ The following is an instruction to install the programs.
 
          RINEX obs   -->    CRINEX    --> z-compressed CRINEX
 
-       ????????.??o  --> ????????.??d -->    ????????.??d.Z   (UNIX)
-       ????????.??O  --> ????????.??D -->    ????????.??E     (DOS)
-       *O.rnx        --> *O.crx       -->    *O.crx.Z         (UNIX)
-       *o.rnx        --> *o.crx       -->    *o.crx.Z         (UNIX)
+       ????????.??o  --> ????????.??d -->    ????????.??d.gz
+       ????????.??O  --> ????????.??D -->    ????????.??D.gz
+       *O.rnx        --> *O.crx       -->    *O.crx.gz
+       *o.rnx        --> *o.crx       -->    *o.crx.gz
 
      - and vice versa (CRZ2RNX)
 
-     - to generate z-compressed CompactRINEX files from old z-compressed RINEX 
+     - to generate compressed CompactRINEX files from old z-compressed RINEX 
        observation files (RNX2CRZ):
 
-       z-compressed RINEX obs -->    CRINEX    --> z-compressed CRINEX
+       compressed RINEX obs -->    CRINEX    --> compressed CRINEX
 
-       ????????.??o.Z         --> ????????.??d --> ????????.??d.Z  (UNIX)
-       ????????.??Y           --> ????????.??D --> ????????.??E    (DOS)
-       *o.rnx.Z               --> *o.crx       --> *o.crx.Z        (UNIX)
+       ????????.??o.gz      --> ????????.??d --> ????????.??d.gz
+       ????????.??o.Z       --> ????????.??d --> ????????.??d.gz
+       *o.rnx.Z             --> *o.crx       --> *o.crx.gz
 
-     - to z-compress CompactRINEX files (RNX2CRZ):
+     - to compress CompactRINEX files (RNX2CRZ):
 
-           CRINEX     -->   z-compressed CRINEX
+           CRINEX     -->   compressed CRINEX
 
-       ????????.??d   -->    ????????.??d.Z                  (UNIX) 
-       ????????.??D   -->    ????????.??E                    (DOS)
-       *o.crx         -->    *o.crx.Z                        (UNIX)
+       ????????.??d   -->    ????????.??d.gz
+       *o.crx         -->    *o.crx.gz
 
      - to z-compress RINEX NAV/MET/etc. files (RNX2CRZ):
 
-         RINEX nav   --> z-compressed RINEX nav
+           RINEX     --> z-compressed RINEX nav
 
-       ????????.??n  -->    ????????.??n.Z                    (UNIX)
-       ????????.??g  -->    ????????.??g.Z                    (UNIX)
-       ????????.??l  -->    ????????.??l.Z                    (UNIX)
-       ????????.??p  -->    ????????.??p.Z                    (UNIX)
-       ????????.??h  -->    ????????.??h.Z                    (UNIX)
-       ????????.??b  -->    ????????.??b.Z                    (UNIX)
-       ????????.??m  -->    ????????.??m.Z                    (UNIX)
-       ????????.??c  -->    ????????.??c.Z                    (UNIX)
-       ????????.??N  -->    ????????.??X                      (DOS)
-       ????????.??G  -->    ????????.??V                      (DOS)
-       ????????.??L  -->    ????????.??T                      (DOS)
-       ????????.??P  -->    ????????.??Q                      (DOS)
-       ????????.??H  -->    ????????.??U                      (DOS)
-       ????????.??B  -->    ????????.??A                      (DOS)
-       ????????.??M  -->    ????????.??W                      (DOS)
-       ????????.??C  -->    ????????.??K                      (DOS)
-       *n.rnx        -->    *n.rnx.Z                          (UNIX)
-       *m.rnx        -->    *m.rnx.Z                          (UNIX)
+       ????????.??n  -->    ????????.??n.gz
+       ????????.??g  -->    ????????.??g.gz
+       ????????.??l  -->    ????????.??l.gz
+       ????????.??p  -->    ????????.??p.gz
+       ????????.??h  -->    ????????.??h.gz
+       ????????.??b  -->    ????????.??b.gz
+       ????????.??m  -->    ????????.??m.gz
+       ????????.??c  -->    ????????.??c.gz
+       *n.rnx        -->    *n.rnx.gz
+       *m.rnx        -->    *m.rnx.gz
 
      - and vice versa (CRZ2RNX)
 
      - to decompress old z-compressed RINEX observation files (CRZ2RNX):
 
-       ????????.??o.Z  -->    ????????.??o                    (UNIX)
-       ????????.??Y    -->    ????????.??O                    (DOS)
-       *.rnx.Z         -->    *.rnx                           (UNIX)
+       ????????.??o.gz -->    ????????.??o
+       ????????.??o.Z  -->    ????????.??o
+       *.rnx.gz        -->    *.rnx
+       *.rnx.Z         -->    *.rnx
 
      - to convert CompactRINEX files to RINEX observation files (CRZ2RNX):
 
-       ????????.??d    -->    ????????.??o                    (UNIX)
-       ????????.??d.Z  -->    ????????.??o                    (UNIX)
-       ????????.??D    -->    ????????.??O                    (DOS)
-       ????????.??E    -->    ????????.??O                    (DOS)
-       *.crx           -->    *.rnx                           (UNIX)
+       ????????.??d    -->    ????????.??o
+       ????????.??d.gz -->    ????????.??o
+       ????????.??d.Z  -->    ????????.??o
+       ????????.??D    -->    ????????.??O
+       *.crx           -->    *.rnx
 
 
 Remarks:
   - The extensions of the input files should conform to the RINEX convention
     recommended in the documentation of RINEX. The current and old conventions  
     are written in the following references:
-       International GNSS Service (IGS), RINEX Working Group and Radio Technical 
-             Commission for Maritime Services Special Committee 104 (RTCM-SC104),
-             2013, RINEX The Receiver Independent Exchange Format Version 3.02
-       Gurtner, W., L. Estey (2006), RINEX The Receiver Independent Exchange
-             Format Version 3.01, avairable from 
-             ftp://ftp.igs.org/pub/data/format/rinex301.pdf
+       Romero I. (ed.), RINEX The Receiver Independent Exchange Format Version 4.00,
+             1 December 2021;
+             https://files.igs.org/pub/data/format/rinex_4.00.pdf
+       Gurtner, W., L. Estey (2009), RINEX The Receiver Independent Exchange
+             Format Version 3.01, 22 June 2009;
+             https://files.igs.org/pub/data/format/rinex301.pdf
     The software accept both of them.
-    The extentions of the output files alse follow the RINEX convention.
-  - UNIX versino of the front-end tools has following feature (ver. 4.0.4-)
+  - The UNIX version of the front-end tools has following feature (ver. 4.0.4-)
        * help message is shown if executed with option -h or with no argument.
        * The output files are created to the same directory as the 
          input file in default. The option "-c" may be used to change 
          them to the current directory.
        * The input files are removed if option "-d" is specified,
          otherwise they are preserved.
-       * The tools inquire if overwrite the an output file if it preexist.
+       * The UNIX tools inquire if overwrite the an output file if it preexist.
          The option -f forces overwriting without inquiring
-       * Both Z-compressed and gzipped files can be processed.
+       * Both gzipped and Z-compressed files can be processed.
 
 

@@ -2,11 +2,11 @@
 #
 #         C-shell script : CRZ2RNX
 #             (frontend of CRX2RNX)
-#                 1996.12.19  created by Y. Hatanaka.
-#                 2007.06.10  updated by Y. Hatanaka.
+#                 1996-12-19  created by Y. Hatanaka.
+#                 2007-06-10  updated by Y. Hatanaka.
 #                      - replace "compress" with "uncompress"
 #                      - file name extension may be lower and upper case
-#                 2009.07.07  modified extensively by Y. Hatanaka.
+#                 2009-07-07  modified extensively by Y. Hatanaka.
 #                      - Ambiguities/bugs in following items are resolved:
 #                          * setting of output directory
 #                          * case of deletion of input files
@@ -14,15 +14,17 @@
 #                        Options to control them are added.
 #                      - Handling of more RINEX file types are added.
 #                      - 'gzipped' files can be processed.
-#                 2014.03.24  modified by Y. Hatanaka.
+#                 2014-03-24  modified by Y. Hatanaka.
 #                      - Manipulation of file names in the new file naming
 #                        convention (*.rnx/crx) is added.
-#                 2018.11.27  modified by Y. Hatanaka.
+#                 2018-11-27  modified by Y. Hatanaka.
 #                      - Fixing a bug that delete original files by the
 #                        option "-d" even if conversions are unsuccessful.
-#                 2019.07.12  modified by Y. Hatanaka.
+#                 2019-07-12  modified by Y. Hatanaka.
 #                      - Displaying files in process and a new option
 #                        "-q" to suppress it are added.
+#                 2021-12-22  modified by Y. Hatanaka.
+#                      - use 'gzip -dc' instead of 'zcat'
 #
 #--------------------------------------------------------------------
 set help = 0
@@ -48,18 +50,18 @@ CRZ2RNX : C-shell script to decompress multiple RINEX files.
 
   compressed RINEX/CRINEX -->     CRINEX     -->      RINEX
                                ????????.??d  -->   ????????.??o
-       ????????.??d.Z(gz) --> (????????.??d) -->   ????????.??o
-       ????????.??o.Z(gz)                    -->   ????????.??o
-       ????????.??n.Z(gz)                    -->   ????????.??n
-       ????????.??g.Z(gz)                    -->   ????????.??g
-       ????????.??l.Z(gz)                    -->   ????????.??l
-       ????????.??p.Z(gz)                    -->   ????????.??p
-       ????????.??h.Z(gz)                    -->   ????????.??h
-       ????????.??b.Z(gz)                    -->   ????????.??b
-       ????????.??m.Z(gz)                    -->   ????????.??m
-       ????????.??c.Z(gz)                    -->   ????????.??c
-       *.?O.crx.Z(gz)                        -->    *.?O.rnx
-       *.rnx.Z(gz)                           -->    *.rnx
+       ????????.??d.gz(Z) --> (????????.??d) -->   ????????.??o
+       ????????.??o.gz(Z)                    -->   ????????.??o
+       ????????.??n.gz(Z)                    -->   ????????.??n
+       ????????.??g.gz(Z)                    -->   ????????.??g
+       ????????.??l.gz(Z)                    -->   ????????.??l
+       ????????.??p.gz(Z)                    -->   ????????.??p
+       ????????.??h.gz(Z)                    -->   ????????.??h
+       ????????.??b.gz(Z)                    -->   ????????.??b
+       ????????.??m.gz(Z)                    -->   ????????.??m
+       ????????.??c.gz(Z)                    -->   ????????.??c
+       *.?O.crx.gz(Z)                        -->    *.?O.rnx
+       *.rnx.gz(Z)                           -->    *.rnx
 
 Remarks:
   - Installation of CRX2RNX is necessary to use this tool.
@@ -69,7 +71,7 @@ Remarks:
   - An input file is deleted only when the option "-d" is specified and
     the decompression is successful.
 
-   [20190712]
+   [20211217]
 
 EOF
 
@@ -115,11 +117,11 @@ end
 # process files
 foreach file_in ($argv[*])
     if ( ! $quiet ) echo -n "  $file_in"
-    # compose name of output file (excluding ".Z" or ".gz")
+    # compose name of output file (excluding ".gz" or ".Z")
     set ext  = $file_in:e
-    if ( $file_in =~ *.Z || $file_in =~ *.gz ) then
-        set file = $file_in:r  # remove ".Z" or ".gz"
-        set CAT = zcat
+    if ( $file_in =~ *.gz || $file_in =~ *.Z ) then
+        set file = $file_in:r  # remove ".gz" or ".Z"
+        set CAT = 'gzip -dc'
     else
         set file = $file_in
         set CAT = cat;
@@ -131,7 +133,7 @@ foreach file_in ($argv[*])
         set file_out = `echo $file | sed -e 's/crx$/rnx/' -e 's/CRX$/RNX/' `
     else if ( ($file =~ *.??[dDnNgGlLpPhHbBmMcC] ||     \
                $file =~ *.rnx || $file =~ *.RNX ) && \
-                    ($ext == Z || $ext == gz) ) then
+                    ($ext == gz || $ext == Z) ) then
         set file_out = $file
     else
         if ( ! $quiet ) echo " --- skipped. (already compressed or the file name doesn't fit to the naming convention)"

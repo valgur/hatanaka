@@ -5,29 +5,29 @@
 /*     Created by Yuki HATANAKA / Geospatial Information Authority of Japan */
 /*                                                                          */
 /*     ver.                                                                 */
-/*     4.0.0       2007.01.31 test version   Y. Hatanaka                    */
+/*     4.0.0       2007-01-31 test version   Y. Hatanaka                    */
 /*                  - CRINEX 1/3 for RINEX 2.x/3.x                          */
-/*     4.0.1       2007.05.08                Y. Hatanaka                    */
+/*     4.0.1       2007-05-08                Y. Hatanaka                    */
 /*                  - elimination of supports for VMS and SUN OS 4.1.x      */
 /*                  - output not to the current directory but the same      */
 /*                    directory as the input file.                          */
 /*                  - the same code for DOS and UNIX                        */
-/*     4.0.2       2007.06.07                Y. Hatanaka                    */
+/*     4.0.2       2007-06-07                Y. Hatanaka                    */
 /*                  - fixing incompatibility of argument and format         */
 /*                    string of printf.                                     */
-/*     4.0.3       2007.06.21                Y. Hatanaka                    */
+/*     4.0.3       2007-06-21                Y. Hatanaka                    */
 /*                  - fixing a bug on lack of carrying the number           */
 /*                    between lower and upper digits                        */
-/*     4.0.4       2009.06.31                Y. Hatanaka                    */
+/*     4.0.4       2009-06-31                Y. Hatanaka                    */
 /*                  - check null pointer in macro CHOP_LF                   */
 /*                  - increase MAXTYPE from 30 to 50                        */
 /*                  - correct typos in error messages                       */
-/*     4.0.5       2012.07.1x                Y. Hatanaka                    */
+/*     4.0.5       2012-07-1x                Y. Hatanaka                    */
 /*                  - Fixing a bug in displaying error message(#16)         */
 /*                  - minor changes to suppress warning messages            */
 /*                    at compilation.                                       */
 /*                  - check length of input file name                       */
-/*     4.0.6       2014.03.24                Y. Hatanaka                    */
+/*     4.0.6       2014-03-24                Y. Hatanaka                    */
 /*                  - Fixing a bug in outputting epoch lines in case there  */
 /*                    are skipped epochs when a corrupted Compact RINEX     */
 /*                    ver. 3 files are processed with the option "-s".      */
@@ -37,18 +37,22 @@
 /*                    option to keep output in such a case is also added.   */
 /*                  - Manipulation of file names in the new file naming     */
 /*                    convention (*.rnx/crx) is added.                      */
-/*     4.0.7       2016.04.14                Y. Hatanaka                    */
+/*     4.0.7       2016-04-14                Y. Hatanaka                    */
 /*                  - increase the following constants                      */
 /*                       MAXSAT        90     -> 100                        */
 /*                       MAXTYPE       50     -> 100                        */
 /*                       MAXCLM        1024   -> 2048                       */
 /*                       MAX_BUFF_SIZE 131072 -> 204800                     */
-/*     4.0.8       2019.07.12                Y. Hatanaka                    */
+/*     4.0.8       2019-07-12                Y. Hatanaka                    */
 /*                  - New option "-d" is added to delete input file after   */
 /*                    successful conversion.                                */
+/*     4.1.0       2021-12-22                Y. Hatanaka                    */
+/*                  - recover RINEX ver. 4 files as well as RINEX ver. 3    */
+/*                    files from CRINEX ver.3 files.                        */
+/*                 2022-01-06                Y. Hatanaka                    */
+/*                  - VERSION is corrected to 4.1.0                         */
 /*                                                                          */
 /*     Copyright (c) 2007 Geospatial Information Authority of Japan         */
-/*     All rights reserved.                                                 */
 /*                                                                          */
 /****************************************************************************/
 
@@ -58,7 +62,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define VERSION  "ver.4.0.8"
+#define VERSION  "ver.4.1.0"
 
 /**** Exit codes are defined here. ****/
 #ifndef EXIT_SUCCESS
@@ -336,7 +340,7 @@ void header(void){
     CHOP_BLANK(line,p);
     printf("%s\n",line);
     if(strncmp(&line[60],"RINEX VERSION / TYPE",C1*20) != 0 ||
-       (line[5]!='2' && line[5]!='3') ) error_exit(15,"2.x or 3.x");
+       (line[5]!='2' && line[5]!='3' && line[5]!='4' ) ) error_exit(15,"2.x, 3.x  or 4.x");
     rinex_version=atoi(line);
 
     do {
@@ -435,7 +439,7 @@ int  put_event_data(char *dline, char *p_event){
         do {
             nl_count++;
             if(fgets(dline,MAXCLM,stdin) == NULL) exit(exit_status);  /*** eof: exit program successfully ***/
-        } while (crinex_version == 3 && dline[0] == '&');
+        } while (crinex_version >= 3 && dline[0] == '&');
         CHOP_LF(dline,p);
 
         if(dline[0] != ep_top_from || strlen(dline)<29   || ! isdigit(*p_event) ) {
@@ -535,7 +539,7 @@ void data(char *p_sat_lst, int *sattbl, char dflag[][MAXTYPE*2]){
         /**** set # of data types for the GNSS type    ****/
         /**** and write satellite ID in case of RINEX3 ****/
         /**** ---------------------------------------- ****/
-        if(rinex_version == 3 ){
+        if(rinex_version >= 3 ){
             ntype = ntype_record[i];
             strncpy(p_buff,p,C3);
             p_buff += 3;
@@ -543,7 +547,7 @@ void data(char *p_sat_lst, int *sattbl, char dflag[][MAXTYPE*2]){
         /**** repair the data flags ****/
         /**** ----------------------****/
         if(*i0 < 0){       /* new satellite */
-            if(rinex_version == 3 ){
+            if(rinex_version >= 3 ){
                 *flag[i] = '\0';
             }else{
                 sprintf(flag[i],"%-*s",ntype*2,dflag[i]);
