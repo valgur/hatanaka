@@ -146,5 +146,5 @@ executables = importlib_resources.files(hatanaka.bin)
 def _popen(program, args, **kwargs):
     if platform.system() == 'Windows':
         program += '.exe'
-    with executables.joinpath(program) as executable:
-        return subprocess.Popen([str(executable)] + args, **kwargs)
+    executable = executables.joinpath(program)
+    return subprocess.Popen([str(executable)] + args, **kwargs)
