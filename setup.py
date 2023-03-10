@@ -1,3 +1,4 @@
+import os
 import shutil
 from distutils import ccompiler
 from pathlib import Path
@@ -10,10 +11,15 @@ from setuptools.command.build_clib import build_clib as _build_clib
 class build_clib(_build_clib):
     def build_libraries(self, libraries):
         cc = ccompiler.new_compiler()
+        # BUILD_STATIC is required to build auditwheel-compliant wheels on Linux
+        build_static = os.environ.get("BUILD_STATIC", "n") in ["y", "1"]
+        link_flags = []
         if cc.compiler_type == "msvc":
             compile_flags = ["/O2"]
         else:
             compile_flags = ["-O3", "-Wno-unused-result"]
+            if build_static:
+                link_flags = ["-static"]
 
         output_dir = Path("build/lib/hatanaka/bin")
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -28,6 +34,7 @@ class build_clib(_build_clib):
                     obj_files,
                     executable,
                     output_dir=str(output_dir),
+                    extra_postargs=link_flags,
                 )
 
         # copy to source dir as well for easier testing

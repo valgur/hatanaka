@@ -42,6 +42,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
+          BUILD_STATIC: "${{ runner.os == 'Linux' && 'y' || 'n' }}"
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: pytest {project}/test --color=yes -v
           CIBW_PRERELEASE_PYTHONS: True
@@ -50,6 +51,9 @@ jobs:
           CIBW_ARCHS_MACOS: auto
           # Disable building PyPy wheels on all platforms
           CIBW_SKIP: pp*
+
+      - name: Inspect
+        run: ls wheelhouse/
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
