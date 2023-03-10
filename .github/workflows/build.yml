@@ -60,7 +60,7 @@ jobs:
           mkdir tmp
           cd tmp
           python -m pip install pytest pytest-cov
-          pytest --pyargs hatanaka -vv --cov-report=xml --cov=hatanaka.hatanaka --cov=hatanaka.general_compression --cov=hatanaka.cli
+          pytest --pyargs hatanaka -v --color=yes --cov-report=xml --cov=hatanaka.hatanaka --cov=hatanaka.general_compression --cov=hatanaka.cli
 
       - name: Upload coverage to Codecov
         if: ${{ matrix.install-mode == 'wheel' }}

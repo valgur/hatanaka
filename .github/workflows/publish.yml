@@ -44,7 +44,7 @@ jobs:
         env:
           BUILD_STATIC: "${{ runner.os == 'Linux' && 'y' || 'n' }}"
           CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest {project}/test --color=yes -v
+          CIBW_TEST_COMMAND: pytest --pyargs hatanaka --color=yes -v
           CIBW_PRERELEASE_PYTHONS: True
           CIBW_ARCHS_LINUX: auto
           CIBW_ARCHS_WINDOWS: auto
