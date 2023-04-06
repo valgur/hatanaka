@@ -40,20 +40,20 @@ jobs:
 
       - name: sdist install
         if: ${{ matrix.install-mode == 'sdist' }}
+        shell: bash
         run: |
           python setup.py sdist
           ls dist/
-          python .github/pip.py install dist/hatanaka-*.tar.gz
+          pip install dist/hatanaka-*.tar.gz
 
       - name: wheel install
         if: ${{ matrix.install-mode == 'wheel' }}
-        env:
-          BUILD_STATIC: "${{ runner.os == 'Linux' && 'y' || 'n' }}"
+        shell: bash
         run: |
           python -m pip install wheel
           python setup.py bdist_wheel
           ls dist/
-          python .github/pip.py install dist/hatanaka-*.whl
+          pip install dist/hatanaka-*.whl
 
       - name: Test
         run: |
@@ -63,14 +63,10 @@ jobs:
           pytest --pyargs hatanaka -v --color=yes --cov-report=xml --cov=hatanaka.hatanaka --cov=hatanaka.general_compression --cov=hatanaka.cli
 
       - name: Upload coverage to Codecov
-        if: ${{ matrix.install-mode == 'wheel' }}
         uses: codecov/codecov-action@v3
         env:
           OS: ${{ matrix.os }}
           PYTHON: ${{ matrix.python-version }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./tmp/coverage.xml
           env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          verbose: false
+          fail_ci_if_error: false
