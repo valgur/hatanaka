@@ -2,10 +2,11 @@
 
 See also [CHANGES.md](rnxcmp/docs/CHANGES.md) of the original RNXCMP software package.
 
-## [2.8.1] - 2023-03-10
+## [2.8.1] - 2023-04-06
 
 - Fixed a `DeprecationWarning` from `importlib_resources`. ([#1](https://github.com/valgur/hatanaka/pull/1) [@warrickball](https://github.com/warrickball))
-- More reliable C compiler detection with `distutils.ccompiler`.
+- More robust C compiler detection with `distutils.ccompiler`.
+- Wheels are now published for all architectures, not just x64.
 
 ## [2.8.0] - 2022-01-27
 
