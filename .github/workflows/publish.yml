@@ -42,15 +42,10 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
-          BUILD_STATIC: "${{ runner.os == 'Linux' && 'y' || 'n' }}"
-          CIBW_TEST_REQUIRES: pytest
-          CIBW_TEST_COMMAND: pytest --pyargs hatanaka --color=yes -v
           CIBW_PRERELEASE_PYTHONS: True
-          CIBW_ARCHS_LINUX: auto
-          CIBW_ARCHS_WINDOWS: auto
-          CIBW_ARCHS_MACOS: auto
-          # Disable building PyPy wheels on all platforms
-          CIBW_SKIP: pp*
+          CIBW_ARCHS_LINUX: x86_64,i686,aarch64,ppc64le,s390x
+          CIBW_ARCHS_WINDOWS: x86_64,arm64,universal2
+          CIBW_ARCHS_MACOS: AMD64,x86,ARM64
 
       - name: Inspect
         run: ls wheelhouse/

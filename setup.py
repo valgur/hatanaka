@@ -11,15 +11,11 @@ from setuptools.command.build_clib import build_clib as _build_clib
 class build_clib(_build_clib):
     def build_libraries(self, libraries):
         cc = ccompiler.new_compiler()
-        # BUILD_STATIC is required to build auditwheel-compliant wheels on Linux
-        build_static = os.environ.get("BUILD_STATIC", "n") in ["y", "1"]
         link_flags = []
         if cc.compiler_type == "msvc":
             compile_flags = ["/O2"]
         else:
             compile_flags = ["-O3", "-Wno-unused-result"]
-            if build_static:
-                link_flags = ["-static"]
 
         output_dir = Path("build/lib/hatanaka/bin")
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -48,13 +44,15 @@ cmdclass = {"build_clib": build_clib}
 
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+    from auditwheel.policy import get_policy_name, POLICY_PRIORITY_HIGHEST
 
     class bdist_wheel(_bdist_wheel):
         def get_tag(self):
             impl, abi_tag, plat_name = super().get_tag()
             impl = "py3"
             abi_tag = "none"
-            plat_name = plat_name.replace("linux", "manylinux1")
+            if "linux" in plat_name:
+                plat_name = get_policy_name(POLICY_PRIORITY_HIGHEST)
             return impl, abi_tag, plat_name
 
     cmdclass["bdist_wheel"] = bdist_wheel

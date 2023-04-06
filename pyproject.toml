@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel", "auditwheel"]
+
+[tool.cibuildwheel]
+build = "cp311*"
+# Disable building PyPy wheels on all platforms
+skip = ["pp*"]
+archs = ["auto"]
+
+test-requires = "pytest"
+test-command = "pytest --pyargs hatanaka --color=yes -v"
+
+# Disable 'auditwheel repair', which incorrectly assumes that the rnx2crx and crx2rnx executables are Python extensions
+repair-wheel-command = ""
