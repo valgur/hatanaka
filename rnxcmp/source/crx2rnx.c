@@ -769,8 +769,7 @@ int  read_chk_line(char *line){
             return 1;
         }
     }
-    if( *(p-1) == '\n' )p--;
-    if( *(p-1) == '\r' )p--;   /*** check DOS CR/LF ***/
+    if( p != line && *(p-1) == '\r' )p--;   /*** check DOS CR/LF ***/
     *p = '\0';
     return 0;
 }
