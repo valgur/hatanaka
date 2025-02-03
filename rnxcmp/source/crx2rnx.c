@@ -213,7 +213,10 @@ int main(int argc, char *argv[]){
         read_clock(dline,clk1.u,clk1.l);
         for(i=0,i0=sattbl ; i<nsat ; i++,i0++){
             ntype = ntype_record[i];
-            if( getdiff(dy1[i],dy0[*i0],*i0,dflag[i]) != 0 ) {skip_to_next(dline);goto SKIP;}
+            if( getdiff(dy1[i],*i0 != -1 ? dy0[*i0] : NULL,*i0,dflag[i]) != 0 ) {
+                skip_to_next(dline);
+                goto SKIP;
+            }
         }
 
         /*************************************/
