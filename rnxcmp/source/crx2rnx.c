@@ -561,19 +561,19 @@ void data(char *p_sat_lst, int *sattbl, char dflag[][MAXTYPE*2]){
         /**** ---------------------------- ****/
         for(j=0,py1=dy1[i] ; j<ntype ; j++,py1++){
             if(py1->arc_order >= 0){
-                py0 = &(dy0[*i0][j]);
+                py0 = *i0 != -1 ? &(dy0[*i0][j]) : NULL;
                 if(py1->order < py1->arc_order){
                     (py1->order)++;
                     for(k=0,k1=1; k<py1->order; k++,k1++){
-                        py1->u[k1] = py1->u[k] + py0->u[k];
-                        py1->l[k1] = py1->l[k] + py0->l[k];
+                        py1->u[k1] = py1->u[k] + (py0 ? py0->u[k] : 0);
+                        py1->l[k1] = py1->l[k] + (py0 ? py0->l[k] : 0);
                         py1->u[k1] += py1->l[k1]/100000;  /*** to avoid overflow of dy1.l ***/
                         py1->l[k1] %= 100000;
                     }
                 }else{
                     for(k=0,k1=1; k<py1->order; k++,k1++){
-                        py1->u[k1] = py1->u[k] + py0->u[k1];
-                        py1->l[k1] = py1->l[k] + py0->l[k1];
+                        py1->u[k1] = py1->u[k] + (py0 ? py0->u[k1] : 0);
+                        py1->l[k1] = py1->l[k] + (py0 ? py0->l[k1] : 0);
                         py1->u[k1] += py1->l[k1]/100000;
                         py1->l[k1] %= 100000;
                     }
